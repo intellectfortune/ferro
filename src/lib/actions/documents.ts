@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/actions/profile";
 import { bucketForCategory } from "@/lib/storage";
+import { validateUploadedFile } from "@/lib/file-validation";
 import { revalidatePath } from "next/cache";
 import type { PhotoCategory } from "@/types/database";
 
@@ -39,14 +40,13 @@ export async function uploadVehicleDocument(
   const category = categoryInput as PhotoCategory;
 
   const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) {
+  if (!(file instanceof File)) {
     return { error: "Choose a file to upload." };
   }
-  if (file.size > MAX_FILE_BYTES) {
-    return { error: "File must be under 15MB." };
-  }
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return { error: "Only JPEG, PNG, WEBP, HEIC, or PDF files are supported." };
+
+  const validation = await validateUploadedFile(file, ALLOWED_TYPES, MAX_FILE_BYTES);
+  if (!validation.ok) {
+    return { error: validation.error };
   }
 
   const bucket = bucketForCategory(category);
@@ -56,7 +56,7 @@ export async function uploadVehicleDocument(
   const supabase = await createClient();
   const { error: uploadError } = await supabase.storage
     .from(bucket)
-    .upload(path, file, { contentType: file.type });
+    .upload(path, file, { contentType: validation.realType });
 
   if (uploadError) {
     return { error: uploadError.message };

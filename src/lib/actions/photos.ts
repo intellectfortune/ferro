@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile, canManageVehicles } from "@/lib/actions/profile";
 import { bucketForCategory } from "@/lib/storage";
+import { validateUploadedFile } from "@/lib/file-validation";
 import { revalidatePath } from "next/cache";
 import type { PhotoCategory } from "@/types/database";
 
@@ -22,14 +23,13 @@ export async function uploadVehiclePhoto(
   }
 
   const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) {
+  if (!(file instanceof File)) {
     return { error: "Choose a photo to upload." };
   }
-  if (file.size > MAX_FILE_BYTES) {
-    return { error: "Photo must be under 10MB." };
-  }
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return { error: "Only JPEG, PNG, WEBP, or HEIC photos are supported." };
+
+  const validation = await validateUploadedFile(file, ALLOWED_TYPES, MAX_FILE_BYTES);
+  if (!validation.ok) {
+    return { error: validation.error };
   }
 
   const category: PhotoCategory = "listing_photo";
@@ -40,7 +40,7 @@ export async function uploadVehiclePhoto(
   const supabase = await createClient();
   const { error: uploadError } = await supabase.storage
     .from(bucket)
-    .upload(path, file, { contentType: file.type });
+    .upload(path, file, { contentType: validation.realType });
 
   if (uploadError) {
     return { error: uploadError.message };
