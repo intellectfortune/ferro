@@ -15,12 +15,16 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug, vehicleId } = await params;
   const company = await getCompanyBySlug(slug);
-  if (!company) return { title: "Ferro" };
+  if (!company) return { title: { absolute: "Ferro" } };
   const vehicle = await getPublishedVehicle(company.id, vehicleId);
+  if (!vehicle) return { title: { absolute: company.name } };
+
+  const label = `${vehicle.year ? `${vehicle.year} ` : ""}${vehicle.make} ${vehicle.model}`;
   return {
-    title: vehicle
-      ? `${vehicle.make} ${vehicle.model} — ${company.name}`
-      : company.name,
+    title: { absolute: `${label} — ${company.name}` },
+    description:
+      vehicle.description ??
+      `${label} available to rent from ${company.name}${vehicle.daily_rate ? ` — $${vehicle.daily_rate}/day` : ""}.`,
   };
 }
 

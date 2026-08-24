@@ -56,7 +56,7 @@ export default async function DashboardLayout({
       <SidebarNav vehicleCount={vehicleCount ?? 0} newInquiryCount={newInquiryCount ?? 0} />
 
       <div className="flex min-h-screen flex-1 flex-col">
-        <header className="flex items-center justify-between gap-3 px-4 py-4 sm:px-6 sm:py-6 md:px-10">
+        <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-line bg-ink px-4 py-4 sm:px-6 sm:py-6 md:px-10 md:static md:border-b-0">
           <div className="flex min-w-0 items-center gap-3">
             <MobileMenuButton />
             <div className="min-w-0">

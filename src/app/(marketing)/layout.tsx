@@ -3,7 +3,7 @@ import { MarketingNav } from "./marketing-nav";
 import { MarketingFooter } from "./marketing-footer";
 
 export const metadata: Metadata = {
-  title: "Ferro — Run your exotic rental fleet",
+  title: { absolute: "Ferro — Run your exotic rental fleet" },
   description:
     "Website, CRM, calendar, invoicing, and fleet listings — one system built for owners running their own exotic and luxury rental fleet.",
 };

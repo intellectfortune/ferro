@@ -1,5 +1,31 @@
 import { createClient } from "@/lib/supabase/server";
 
+/** All public storefronts + their published vehicles, for the sitemap. */
+export async function listAllStorefrontsForSitemap() {
+  const supabase = await createClient();
+
+  const { data: companies } = await supabase.from("companies").select("id, slug, updated_at");
+  if (!companies || companies.length === 0) return [];
+
+  const { data: vehicles } = await supabase
+    .from("vehicles")
+    .select("id, company_id, updated_at")
+    .eq("status", "published");
+
+  const vehiclesByCompany = new Map<string, { id: string; updated_at: string }[]>();
+  for (const vehicle of vehicles ?? []) {
+    const list = vehiclesByCompany.get(vehicle.company_id) ?? [];
+    list.push({ id: vehicle.id, updated_at: vehicle.updated_at });
+    vehiclesByCompany.set(vehicle.company_id, list);
+  }
+
+  return companies.map((company) => ({
+    slug: company.slug,
+    updatedAt: company.updated_at,
+    vehicles: vehiclesByCompany.get(company.id) ?? [],
+  }));
+}
+
 export async function getCompanyBySlug(slug: string) {
   const supabase = await createClient();
   const { data: company } = await supabase

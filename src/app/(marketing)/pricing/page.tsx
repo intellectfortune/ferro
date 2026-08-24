@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { PricingCards } from "../pricing-cards";
 
 export const metadata: Metadata = {
-  title: "Pricing — Ferro",
+  title: "Pricing",
   description: "Simple, flat pricing for exotic and luxury rental fleets.",
 };
 

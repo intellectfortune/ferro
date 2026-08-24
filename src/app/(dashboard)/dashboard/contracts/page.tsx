@@ -160,17 +160,17 @@ async function TemplateList({
       {templates.map((template) => (
         <div
           key={`${template.source}-${template.id}`}
-          className="flex items-center justify-between border-b border-line px-5 py-4 last:border-b-0"
+          className="flex items-center justify-between gap-3 border-b border-line px-5 py-4 last:border-b-0"
         >
-          <div>
-            <div className="text-sm font-semibold">{template.name}</div>
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-sm font-semibold">{template.name}</div>
             {template.created && (
               <div className="mt-0.5 font-mono text-[11px] text-muted">
                 Created {new Date(template.created).toLocaleDateString()}
               </div>
             )}
           </div>
-          <span className="rounded-full border border-line px-2 py-0.5 font-mono text-[9.5px] uppercase tracking-wide text-muted">
+          <span className="flex-shrink-0 rounded-full border border-line px-2 py-0.5 font-mono text-[9.5px] uppercase tracking-wide text-muted">
             {SOURCE_LABEL[template.source]}
           </span>
         </div>

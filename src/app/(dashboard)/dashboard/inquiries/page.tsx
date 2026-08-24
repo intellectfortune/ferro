@@ -63,7 +63,7 @@ export default async function InquiriesPage() {
                 className="flex flex-col gap-3 border-b border-line px-5 py-4 last:border-0 sm:flex-row sm:items-start sm:justify-between"
               >
                 <div className="flex-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span className="flex h-6 w-6 items-center justify-center rounded-[6px] bg-amber-soft">
                       <svg
                         viewBox="0 0 20 20"

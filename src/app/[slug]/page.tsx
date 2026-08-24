@@ -12,7 +12,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const company = await getCompanyBySlug(slug);
-  return { title: company ? `${company.name} — Ferro` : "Ferro" };
+  if (!company) return { title: { absolute: "Ferro" } };
+  return {
+    title: { absolute: company.name },
+    description: `Browse the exotic and luxury rental fleet available from ${company.name}.`,
+  };
 }
 
 export default async function CompanyStorefrontPage({

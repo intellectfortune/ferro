@@ -3,7 +3,7 @@ import { getWaitlistCount } from "@/lib/queries/waitlist";
 import { WaitlistForm } from "../waitlist-form";
 
 export const metadata: Metadata = {
-  title: "Join the waitlist — Ferro",
+  title: "Join the waitlist",
   description: "Early access opens soon for exotic and luxury rental fleet owners.",
 };
 
