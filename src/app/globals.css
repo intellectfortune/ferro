@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+/*
+ * Token roles (not literal colors) so classes like `bg-ink text-paper`
+ * work unchanged in both themes. Values match the ferro-preview-a.html
+ * design reference — this is the component reference going forward.
+ *   ink       = page background
+ *   paper     = page foreground/text
+ *   muted     = secondary/tertiary text (labels, captions, timestamps)
+ *   surface   = raised panel background (cards, sidebar, inputs)
+ *   surface-2 = hover/active background, one step up from surface
+ *   line      = hairline border/divider
+ *   amber       = solid brand fill (buttons) — fixed, same both modes
+ *   amber-text  = amber used as text/border on the page background —
+ *                 darkened in light mode so it holds AA contrast on white
+ *   amber-soft  = tinted pill background (role badges, status tags)
+ *   on-amber    = text/icon color for content sitting on top of an
+ *                 amber fill — always dark, independent of theme
+ *
+ * Light is the default (:root). Dark applies via prefers-color-scheme
+ * unless overridden by data-theme, and data-theme always wins outright.
+ */
+:root {
+  --color-ink: #f5f5f3;
+  --color-paper: #14140f;
+  --color-muted: #6b6b62;
+  --color-surface: #ffffff;
+  --color-surface-2: #eaeae6;
+  --color-line: #dddddd;
+  --color-amber: #f5821f;
+  --color-amber-text: #b85f14;
+  --color-amber-soft: #fce3cb;
+  --color-on-amber: #0b0b0d;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-ink: #0b0b0d;
+    --color-paper: #f5f5f7;
+    --color-muted: #8a8a92;
+    --color-surface: #131316;
+    --color-surface-2: #1b1b1f;
+    --color-line: #232327;
+    --color-amber-text: #f5821f;
+    --color-amber-soft: rgba(245, 130, 31, 0.14);
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-ink: #0b0b0d;
+  --color-paper: #f5f5f7;
+  --color-muted: #8a8a92;
+  --color-surface: #131316;
+  --color-surface-2: #1b1b1f;
+  --color-line: #232327;
+  --color-amber-text: #f5821f;
+  --color-amber-soft: rgba(245, 130, 31, 0.14);
+}
+
+/*
+ * Marketing site (joinferro.com root domain) is always dark — brand
+ * consistency for a landing page, independent of the app's light/dark
+ * toggle. Scoped to a class (not data-theme, which only affects <html>)
+ * so it can wrap just the (marketing) route group's layout.
+ */
+.marketing-scope {
+  --color-ink: #0b0b0d;
+  --color-paper: #f5f5f7;
+  --color-muted: #9a9aa0;
+  --color-muted-dim: #56565c;
+  --color-surface: #131316;
+  --color-surface-2: #1b1b1f;
+  --color-line: #232327;
+  --color-amber: #f5821f;
+  --color-amber-text: #f5821f;
+  --color-amber-soft: rgba(245, 130, 31, 0.12);
+  --color-on-amber: #0b0b0d;
+}
+
+@theme inline {
+  --color-ink: var(--color-ink);
+  --color-paper: var(--color-paper);
+  --color-muted: var(--color-muted);
+  --color-muted-dim: var(--color-muted-dim, var(--color-muted));
+  --color-surface: var(--color-surface);
+  --color-surface-2: var(--color-surface-2);
+  --color-line: var(--color-line);
+  --color-amber: var(--color-amber);
+  --color-amber-text: var(--color-amber-text);
+  --color-amber-soft: var(--color-amber-soft);
+  --color-on-amber: var(--color-on-amber);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
