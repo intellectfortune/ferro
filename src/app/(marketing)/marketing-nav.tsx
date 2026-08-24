@@ -3,7 +3,7 @@ import Link from "next/link";
 export function MarketingNav() {
   return (
     <div className="mx-auto max-w-[1100px] px-6">
-      <nav className="flex items-center justify-between py-6">
+      <nav className="flex items-center justify-between py-5 sm:py-6">
         <Link
           href="/"
           className="flex items-center gap-2.5 font-mono text-[19px] font-bold tracking-tight"
@@ -14,20 +14,22 @@ export function MarketingNav() {
           </span>
           ferro<span className="text-amber-text">_</span>
         </Link>
-        <div className="hidden items-center gap-8 text-sm text-muted sm:flex">
-          <Link href="/pricing" className="transition hover:text-paper">
-            Pricing
-          </Link>
-          <Link href="/login" className="transition hover:text-paper">
-            Log in
+        <div className="flex items-center gap-5 sm:gap-8">
+          <div className="hidden items-center gap-8 text-sm text-muted sm:flex">
+            <Link href="/pricing" className="transition hover:text-paper">
+              Pricing
+            </Link>
+            <Link href="/login" className="transition hover:text-paper">
+              Log in
+            </Link>
+          </div>
+          <Link
+            href="/waitlist"
+            className="rounded-[9px] bg-amber px-5 py-2.5 text-[13.5px] font-bold text-on-amber transition hover:brightness-110"
+          >
+            Join waitlist
           </Link>
         </div>
-        <Link
-          href="/waitlist"
-          className="rounded-[9px] bg-amber px-5 py-2.5 text-[13.5px] font-bold text-on-amber transition hover:brightness-110"
-        >
-          Join waitlist
-        </Link>
       </nav>
     </div>
   );
