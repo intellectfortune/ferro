@@ -120,19 +120,37 @@ async function refreshAndStore(companyId: string, refreshToken: string) {
   return credentials;
 }
 
+// A page render fires several Bouncie calls concurrently (Promise.all across
+// vehicles/trips). Without this, each call independently checks-then-refreshes
+// the token, so concurrent calls near expiry race: they can each refresh with
+// the same (possibly single-use) refresh token, or use a token that expires
+// between the check and the request actually reaching Bouncie — producing a
+// 401 from the API itself. Sharing one in-flight refresh per company avoids
+// the race; on slower connections the check-to-request gap is wider, making
+// this more likely to surface there.
+const inFlightRefresh = new Map<string, Promise<BouncieCredentials>>();
+
 /**
  * Returns a valid access token for the company's Bouncie connection,
  * refreshing it first if it's expired or about to be. Returns null if
  * the company hasn't connected Bouncie.
  */
 async function getValidAccessToken(companyId: string) {
+  const existingRefresh = inFlightRefresh.get(companyId);
+  if (existingRefresh) return (await existingRefresh).access_token;
+
   const credentials = await getStoredCredentials(companyId);
   if (!credentials) return null;
 
   const expiresInMs = new Date(credentials.expires_at).getTime() - Date.now();
-  if (expiresInMs > 60_000) return credentials.access_token;
+  if (expiresInMs > 120_000) return credentials.access_token;
 
-  const refreshed = await refreshAndStore(companyId, credentials.refresh_token);
+  const refreshPromise = refreshAndStore(companyId, credentials.refresh_token).finally(() => {
+    inFlightRefresh.delete(companyId);
+  });
+  inFlightRefresh.set(companyId, refreshPromise);
+
+  const refreshed = await refreshPromise;
   return refreshed.access_token;
 }
 

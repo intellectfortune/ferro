@@ -1,5 +1,9 @@
 import Link from "next/link";
-import { listVehiclesWithCoverPhoto, countVehiclesAddedThisMonth } from "@/lib/queries/vehicles";
+import {
+  listVehiclesWithCoverPhoto,
+  countVehiclesAddedThisMonth,
+  countActiveVehicles,
+} from "@/lib/queries/vehicles";
 import {
   countUpcomingBookings,
   countBookingsStartingThisWeek,
@@ -54,6 +58,7 @@ export default async function DashboardPage() {
 
   const [
     vehicles,
+    activeFleet,
     vehiclesAddedThisMonth,
     upcomingBookings,
     bookingsThisWeek,
@@ -64,6 +69,7 @@ export default async function DashboardPage() {
     revenueLastMonth,
   ] = await Promise.all([
     listVehiclesWithCoverPhoto(6),
+    countActiveVehicles(),
     countVehiclesAddedThisMonth(),
     countUpcomingBookings(),
     countBookingsStartingThisWeek(),
@@ -73,7 +79,6 @@ export default async function DashboardPage() {
     canSeeRevenue ? sumRevenueThisMonth() : Promise.resolve(null),
     canSeeRevenue ? sumRevenueLastMonth() : Promise.resolve(null),
   ]);
-  const activeFleet = vehicles.filter((v) => v.status !== "archived").length;
 
   const revenueChangePct =
     canSeeRevenue && revenueLastMonth
