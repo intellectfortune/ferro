@@ -97,3 +97,49 @@ body {
   background: var(--color-ink);
   color: var(--color-paper);
 }
+
+.legal-content h2 {
+  margin-top: 2.5rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.legal-content h2:first-child {
+  margin-top: 0;
+}
+.legal-content h3 {
+  margin-top: 1.5rem;
+  font-size: 0.925rem;
+  font-weight: 600;
+}
+.legal-content p,
+.legal-content li {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--color-paper);
+  opacity: 0.85;
+}
+.legal-content ul,
+.legal-content ol {
+  margin-top: 0.75rem;
+  padding-left: 1.25rem;
+}
+.legal-content ul {
+  list-style: disc;
+}
+.legal-content ol {
+  list-style: decimal;
+}
+.legal-content li {
+  margin-top: 0.4rem;
+}
+.legal-content strong {
+  font-weight: 600;
+  opacity: 1;
+}
+.legal-content a {
+  color: var(--color-amber-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

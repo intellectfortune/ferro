@@ -44,12 +44,18 @@ export async function submitListingRequest(
     return { error: error.message };
   }
 
-  await notifyAdminOfListingRequest({
-    companyName: company?.name ?? "Unknown company",
-    submitterName: profile.full_name ?? profile.email,
-    submitterEmail: profile.email,
-    message,
-  });
+  try {
+    await notifyAdminOfListingRequest({
+      companyName: company?.name ?? "Unknown company",
+      submitterName: profile.full_name ?? profile.email,
+      submitterEmail: profile.email,
+      message,
+    });
+  } catch (err) {
+    // The request itself is already saved — a notification-email hiccup
+    // shouldn't surface as a failure for something that succeeded.
+    console.error("Failed to send listing request notification email:", err);
+  }
 
   return { error: null, success: true };
 }

@@ -43,20 +43,20 @@ export async function listDocuments() {
     .in("id", uploaderIds);
   const profileById = new Map((profiles ?? []).map((p) => [p.id, p]));
 
-  const withUrls = await Promise.all(
-    docs.map(async (doc) => {
-      const { data: signed } = await supabase.storage
-        .from("vehicle-docs")
-        .createSignedUrl(doc.storage_path, 60 * 60);
-      const uploader = profileById.get(doc.uploaded_by);
+  const { data: signedUrls } = await supabase.storage
+    .from("vehicle-docs")
+    .createSignedUrls(
+      docs.map((d) => d.storage_path),
+      60 * 60
+    );
+  const urlByPath = new Map((signedUrls ?? []).map((s) => [s.path, s.signedUrl]));
 
-      return {
-        ...doc,
-        url: signed?.signedUrl ?? null,
-        uploaderName: uploader?.full_name ?? uploader?.email ?? "Unknown",
-      };
-    })
-  );
-
-  return withUrls;
+  return docs.map((doc) => {
+    const uploader = profileById.get(doc.uploaded_by);
+    return {
+      ...doc,
+      url: urlByPath.get(doc.storage_path) ?? null,
+      uploaderName: uploader?.full_name ?? uploader?.email ?? "Unknown",
+    };
+  });
 }

@@ -10,6 +10,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${siteUrl}/waitlist`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${siteUrl}/terms`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${siteUrl}/privacy`, changeFrequency: "yearly", priority: 0.2 },
+    { url: `${siteUrl}/eula`, changeFrequency: "yearly", priority: 0.2 },
+    { url: `${siteUrl}/dmca`, changeFrequency: "yearly", priority: 0.2 },
   ];
 
   const storefronts = await listAllStorefrontsForSitemap();

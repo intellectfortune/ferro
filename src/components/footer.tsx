@@ -12,6 +12,12 @@ export function Footer() {
       <Link href="/privacy" className="hover:text-amber-text">
         Privacy Policy
       </Link>
+      <Link href="/eula" className="hover:text-amber-text">
+        EULA
+      </Link>
+      <Link href="/dmca" className="hover:text-amber-text">
+        DMCA
+      </Link>
       {roiCalculatorUrl && (
         <a
           href={roiCalculatorUrl}

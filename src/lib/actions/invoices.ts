@@ -5,10 +5,39 @@ import { getCurrentProfile, canManageVehicles } from "@/lib/actions/profile";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getStripe } from "@/lib/stripe";
 import { revalidatePath } from "next/cache";
-import type { InvoiceStatus } from "@/types/database";
+import type { Database, InvoiceStatus } from "@/types/database";
 import { getRevenueSeries, type RevenueRange } from "@/lib/queries/invoices";
 
 export type InvoiceActionState = { error: string | null; success?: boolean };
+
+const LOCAL_INSERT_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 400;
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * The Stripe invoice is already finalized (and, for send_invoice collection,
+ * already emailed to the customer) by the time we try this insert — a
+ * transient DB failure here must not silently orphan a real invoice the
+ * customer already received. Retry a few times before giving up.
+ */
+async function insertInvoiceWithRetry(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  row: Database["public"]["Tables"]["invoices"]["Insert"]
+) {
+  let lastError = "Unknown error.";
+  for (let attempt = 1; attempt <= LOCAL_INSERT_ATTEMPTS; attempt++) {
+    const { error } = await supabase.from("invoices").insert(row);
+    if (!error) return null;
+    lastError = error.message;
+    if (attempt < LOCAL_INSERT_ATTEMPTS) {
+      await wait(RETRY_DELAY_MS * attempt);
+    }
+  }
+  return lastError;
+}
 
 export async function fetchRevenueSeries(range: RevenueRange) {
   const profile = await getCurrentProfile();
@@ -93,7 +122,7 @@ export async function createInvoiceForBooking(
 
     const finalized = await stripe.invoices.finalizeInvoice(invoice.id!);
 
-    const { error: insertError } = await supabase.from("invoices").insert({
+    const insertError = await insertInvoiceWithRetry(supabase, {
       company_id: profile.company_id,
       booking_id: bookingId,
       stripe_invoice_id: finalized.id!,
@@ -108,7 +137,25 @@ export async function createInvoiceForBooking(
     });
 
     if (insertError) {
-      return { error: insertError.message };
+      // Local save never succeeded after retries — void the Stripe invoice
+      // so we never leave a real (possibly already-emailed) invoice on
+      // Stripe's side with no record of it in Ferro.
+      try {
+        await stripe.invoices.voidInvoice(finalized.id!);
+      } catch (voidErr) {
+        console.error(
+          `Failed to void orphaned Stripe invoice ${finalized.id} after local insert failure:`,
+          voidErr
+        );
+        return {
+          error:
+            `Couldn't save the invoice, and couldn't automatically void it in Stripe either. ` +
+            `Invoice ${finalized.id} needs manual review in your Stripe dashboard. (${insertError})`,
+        };
+      }
+      return {
+        error: `Couldn't save the invoice after several attempts, so it was voided in Stripe to avoid an orphaned charge. Please try again. (${insertError})`,
+      };
     }
   } catch (err) {
     return {
