@@ -46,10 +46,8 @@ export function VehicleCard({
           </svg>
         )}
         <span
-          className={`absolute right-2.5 top-2.5 rounded-full px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide ${
-            status === "published"
-              ? "bg-amber-soft text-amber-text"
-              : "bg-surface-2 text-muted"
+          className={`absolute right-2.5 top-2.5 rounded-full bg-gradient-to-br from-surface to-surface-2 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide ${
+            status === "published" ? "text-amber-text" : "text-muted"
           }`}
         >
           {STATUS_LABEL[status]}
