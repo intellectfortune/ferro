@@ -5,6 +5,7 @@ import { listVehiclesForTracking } from "@/lib/queries/tracking";
 import { listConnectionStatuses } from "@/lib/queries/settings";
 import { listBouncieVehicles, listBouncieTrips, type BouncieTrip } from "@/lib/bouncie";
 import { LiveMap, type MapMarker } from "@/components/live-map";
+import { StatusIcon, FuelIcon } from "@/components/status-icon";
 
 function formatTripRoute(trip: BouncieTrip) {
   const start = new Date(trip.startTime).toLocaleTimeString([], {
@@ -67,6 +68,7 @@ export default async function TrackingPage() {
         lat: location.lat,
         lon: location.lon,
         running: Boolean(live?.stats?.isRunning),
+        photoUrl: vehicle.photoUrl,
       },
     ];
   });
@@ -111,22 +113,20 @@ export default async function TrackingPage() {
                       return (
                         <div className="flex items-center gap-2">
                           {stats?.fuelLevel != null && (
-                            <span className="font-mono text-[10.5px] text-muted">
+                            <span
+                              title="Fuel level"
+                              className="flex items-center gap-1 font-mono text-[10.5px] text-muted"
+                            >
+                              <FuelIcon className="h-3 w-3" />
                               {Math.round(stats.fuelLevel)}%
                             </span>
                           )}
-                          <span
-                            title={engineHealthy ? "Engine healthy" : "Check engine"}
-                            className={`h-1.5 w-1.5 rounded-full ${
-                              engineHealthy ? "bg-amber-text" : "bg-red-400"
-                            }`}
-                          />
-                          <span
-                            title={batteryHealthy ? "Battery healthy" : "Battery issue"}
-                            className={`h-1.5 w-1.5 rounded-full ${
-                              batteryHealthy ? "bg-amber-text" : "bg-red-400"
-                            }`}
-                          />
+                          <span title={engineHealthy ? "Engine healthy" : "Check engine"}>
+                            <StatusIcon healthy={engineHealthy} size="sm" />
+                          </span>
+                          <span title={batteryHealthy ? "Battery healthy" : "Battery issue"}>
+                            <StatusIcon healthy={batteryHealthy} size="sm" />
+                          </span>
                           <span
                             className={`rounded-full px-2 py-0.5 font-mono text-[9.5px] font-bold uppercase tracking-wide ${
                               stats?.isRunning

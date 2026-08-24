@@ -8,6 +8,7 @@ export type MapMarker = {
   lat: number;
   lon: number;
   running: boolean;
+  photoUrl?: string | null;
 };
 
 declare global {
@@ -33,6 +34,79 @@ function loadGoogleMaps(apiKey: string) {
   });
 
   return loadPromise;
+}
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Image failed to load."));
+    img.src = src;
+  });
+}
+
+function drawCover(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  x: number,
+  y: number,
+  w: number,
+  h: number
+) {
+  const imgRatio = img.width / img.height;
+  const boxRatio = w / h;
+  let sx: number, sy: number, sw: number, sh: number;
+  if (imgRatio > boxRatio) {
+    sh = img.height;
+    sw = sh * boxRatio;
+    sx = (img.width - sw) / 2;
+    sy = 0;
+  } else {
+    sw = img.width;
+    sh = sw / boxRatio;
+    sx = 0;
+    sy = (img.height - sh) / 2;
+  }
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+}
+
+/** Circular vehicle-photo pin with a colored ring — falls back to null on any load/CORS failure. */
+async function circularPhotoIcon(photoUrl: string, ringColor: string): Promise<string | null> {
+  try {
+    const img = await loadImage(photoUrl);
+    const size = 64;
+    const ringWidth = 4;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+
+    const radius = size / 2;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(radius, radius, radius - ringWidth, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+    drawCover(ctx, img, ringWidth, ringWidth, size - ringWidth * 2, size - ringWidth * 2);
+    ctx.restore();
+
+    ctx.beginPath();
+    ctx.arc(radius, radius, radius - ringWidth / 2, 0, Math.PI * 2);
+    ctx.lineWidth = ringWidth;
+    ctx.strokeStyle = ringColor;
+    ctx.stroke();
+
+    return canvas.toDataURL("image/png");
+  } catch {
+    return null;
+  }
+}
+
+function pinIcon(color: string) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 30 40"><path d="M15 0C6.7 0 0 6.7 0 15c0 11.2 15 25 15 25s15-13.8 15-25C30 6.7 23.3 0 15 0z" fill="${color}"/><circle cx="15" cy="15" r="6" fill="#0b0b0d" fill-opacity="0.25"/></svg>`;
+  return `data:image/svg+xml;base64,${btoa(svg)}`;
 }
 
 type MapType = "roadmap" | "satellite";
@@ -78,31 +152,49 @@ export function LiveMap({ apiKey, markers }: { apiKey: string; markers: MapMarke
     mapRef.current?.setMapTypeId(mapType);
   }, [mapType]);
 
-  function renderMarkers() {
-    if (!mapRef.current) return;
+  async function renderMarkers() {
+    const map = mapRef.current;
+    if (!map) return;
 
-    markersRef.current.forEach((m) => m.setMap(null));
-    markersRef.current = markers.map(
-      (m) =>
-        new google.maps.Marker({
-          map: mapRef.current!,
-          position: { lat: m.lat, lng: m.lon },
-          title: m.label,
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 8,
-            fillColor: m.running ? "#f5821f" : "#8a8a92",
-            fillOpacity: 1,
-            strokeColor: "#0b0b0d",
-            strokeWeight: 2,
-          },
-        })
+    const ownMarkers = markers;
+    const icons = await Promise.all(
+      ownMarkers.map((m) => {
+        const ringColor = m.running ? "#f5821f" : "#8a8a92";
+        return m.photoUrl
+          ? circularPhotoIcon(m.photoUrl, ringColor)
+          : Promise.resolve<string | null>(null);
+      })
     );
 
-    if (markers.length > 0) {
+    // Bail if markers changed while icons were loading.
+    if (markers !== ownMarkers) return;
+
+    markersRef.current.forEach((m) => m.setMap(null));
+    markersRef.current = ownMarkers.map((m, i) => {
+      const photoIconUrl = icons[i];
+      const ringColor = m.running ? "#f5821f" : "#8a8a92";
+      return new google.maps.Marker({
+        map,
+        position: { lat: m.lat, lng: m.lon },
+        title: m.label,
+        icon: photoIconUrl
+          ? {
+              url: photoIconUrl,
+              scaledSize: new google.maps.Size(40, 40),
+              anchor: new google.maps.Point(20, 20),
+            }
+          : {
+              url: pinIcon(ringColor),
+              scaledSize: new google.maps.Size(30, 40),
+              anchor: new google.maps.Point(15, 40),
+            },
+      });
+    });
+
+    if (ownMarkers.length > 0) {
       const bounds = new google.maps.LatLngBounds();
-      markers.forEach((m) => bounds.extend({ lat: m.lat, lng: m.lon }));
-      mapRef.current.fitBounds(bounds, 60);
+      ownMarkers.forEach((m) => bounds.extend({ lat: m.lat, lng: m.lon }));
+      map.fitBounds(bounds, 60);
     }
   }
 

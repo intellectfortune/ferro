@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { listConnectionStatuses } from "@/lib/queries/settings";
 import { getBouncieVehicle, listBouncieTrips, type BouncieTrip } from "@/lib/bouncie";
+import { StatusIcon, FuelIcon } from "@/components/status-icon";
 
 function formatDuration(startTime: string, endTime: string) {
   const mins = Math.round(
@@ -17,27 +18,6 @@ function timeAgo(iso: string) {
   const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours}h ago`;
   return `${Math.floor(hours / 24)}d ago`;
-}
-
-function StatusIcon({ healthy }: { healthy: boolean }) {
-  return (
-    <span
-      className={`flex h-5 w-5 items-center justify-center rounded-full ${
-        healthy ? "bg-amber-soft text-amber-text" : "bg-red-400/10 text-red-400"
-      }`}
-    >
-      {healthy ? (
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3">
-          <path d="M3 8.5l3 3 7-7" />
-        </svg>
-      ) : (
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-3 w-3">
-          <path d="M8 1.5l7 12.5H1z" />
-          <path d="M8 6.5v3.5M8 12h.01" />
-        </svg>
-      )}
-    </span>
-  );
 }
 
 export async function TrackingSection({
@@ -127,7 +107,8 @@ async function TrackingData({ companyId, imei }: { companyId: string; imei: stri
           )}
         </div>
         <div>
-          <div className="font-mono text-[10.5px] uppercase tracking-wide text-muted">
+          <div className="flex items-center gap-1.5 font-mono text-[10.5px] uppercase tracking-wide text-muted">
+            <FuelIcon className="h-3 w-3" />
             Fuel level
           </div>
           <div className="mt-1 text-lg font-bold">
