@@ -14,7 +14,7 @@ export function MarketingNav() {
           </span>
           ferro<span className="text-amber-text">_</span>
         </Link>
-        <div className="flex items-center gap-5 sm:gap-8">
+        <div className="flex items-center gap-3 sm:gap-8">
           <div className="hidden items-center gap-8 text-sm text-muted sm:flex">
             <Link href="/pricing" className="transition hover:text-paper">
               Pricing
@@ -24,8 +24,14 @@ export function MarketingNav() {
             </Link>
           </div>
           <Link
+            href="/login"
+            className="text-sm text-muted transition hover:text-paper sm:hidden"
+          >
+            Log in
+          </Link>
+          <Link
             href="/waitlist"
-            className="rounded-[9px] bg-amber px-5 py-2.5 text-[13.5px] font-bold text-on-amber transition hover:brightness-110"
+            className="whitespace-nowrap rounded-[9px] bg-amber px-4 py-2 text-[13px] font-bold text-on-amber transition hover:brightness-110 sm:px-5 sm:py-2.5 sm:text-[13.5px]"
           >
             Join waitlist
           </Link>
