@@ -36,7 +36,8 @@ export type ConnectionProvider =
   | "bouncie"
   | "google_ads"
   | "meta_ads"
-  | "docusign";
+  | "docusign"
+  | "pandadoc";
 export type ConnectionStatus = "connected" | "disconnected";
 export type InvoiceStatus = "draft" | "open" | "paid" | "void" | "uncollectible";
 export type InquirySource = "web_form" | "call" | "instagram_dm";
@@ -405,6 +406,8 @@ export interface Database {
           company_id: string;
           booking_id: string;
           docusign_envelope_id: string | null;
+          esign_provider: ConnectionProvider | null;
+          pandadoc_document_id: string | null;
           status: ContractStatus;
           customer_name: string;
           customer_email: string;
@@ -419,6 +422,8 @@ export interface Database {
           company_id: string;
           booking_id: string;
           docusign_envelope_id?: string | null;
+          esign_provider?: ConnectionProvider | null;
+          pandadoc_document_id?: string | null;
           status?: ContractStatus;
           customer_name: string;
           customer_email: string;

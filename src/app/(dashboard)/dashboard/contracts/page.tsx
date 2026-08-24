@@ -3,6 +3,19 @@ import { redirect } from "next/navigation";
 import { getCurrentProfile, canManageVehicles } from "@/lib/actions/profile";
 import { listConnectionStatuses } from "@/lib/queries/settings";
 import { listDocusignTemplates } from "@/lib/docusign";
+import { listPandaDocTemplates } from "@/lib/pandadoc";
+
+type UnifiedTemplate = {
+  id: string;
+  name: string;
+  created: string | null;
+  source: "docusign" | "pandadoc";
+};
+
+const SOURCE_LABEL: Record<UnifiedTemplate["source"], string> = {
+  docusign: "DocuSign",
+  pandadoc: "PandaDoc",
+};
 
 export default async function ContractsPage() {
   const profile = await getCurrentProfile();
@@ -11,52 +24,121 @@ export default async function ContractsPage() {
   const connections = await listConnectionStatuses();
   const docusignConnected =
     connections.find((c) => c.provider === "docusign")?.status === "connected";
+  const pandadocConnected =
+    connections.find((c) => c.provider === "pandadoc")?.status === "connected";
+  const canManage = canManageVehicles(profile.role);
 
   return (
     <div>
       <h1 className="mb-8 text-2xl font-bold tracking-tight">Contracts</h1>
 
-      {!docusignConnected ? (
+      {!docusignConnected && !pandadocConnected ? (
         <div className="rounded-[14px] border border-line bg-surface p-6">
-          <h2 className="text-base font-bold">Connect DocuSign</h2>
+          <h2 className="text-base font-bold">Connect an e-signature provider</h2>
           <p className="mt-1 max-w-lg text-sm leading-relaxed text-muted">
-            Contracts are sent from your own DocuSign account and its
-            existing templates — connect it to get started.
+            Contracts are sent from your own DocuSign or PandaDoc account and
+            its existing templates — connect either (or both) to get started.
           </p>
-          {canManageVehicles(profile.role) ? (
-            <Link
-              href="/api/docusign/authorize"
-              className="mt-5 inline-block rounded-[9px] bg-amber px-4 py-2 text-sm font-medium text-on-amber transition hover:brightness-110"
-            >
-              Connect DocuSign →
-            </Link>
+          {canManage ? (
+            <div className="mt-5 flex gap-3">
+              <Link
+                href="/api/docusign/authorize"
+                className="inline-block rounded-[9px] bg-amber px-4 py-2 text-sm font-medium text-on-amber transition hover:brightness-110"
+              >
+                Connect DocuSign →
+              </Link>
+              <Link
+                href="/api/pandadoc/authorize"
+                className="inline-block rounded-[9px] border border-line px-4 py-2 text-sm font-medium text-paper transition hover:border-amber-text hover:text-amber-text"
+              >
+                Connect PandaDoc →
+              </Link>
+            </div>
           ) : (
             <p className="mt-5 text-sm text-muted">
-              Ask an owner or broker to connect DocuSign from Settings.
+              Ask an owner or broker to connect one from Settings.
             </p>
           )}
         </div>
       ) : (
-        <TemplateList companyId={profile.company_id} />
+        <>
+          <TemplateList
+            companyId={profile.company_id}
+            docusignConnected={docusignConnected}
+            pandadocConnected={pandadocConnected}
+          />
+          {(!docusignConnected || !pandadocConnected) && canManage && (
+            <div className="mt-4 flex items-center gap-2 text-sm text-muted">
+              <span>Also using {!docusignConnected ? "DocuSign" : "PandaDoc"}?</span>
+              <Link
+                href={!docusignConnected ? "/api/docusign/authorize" : "/api/pandadoc/authorize"}
+                className="text-amber-text hover:underline"
+              >
+                Connect it too →
+              </Link>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
 }
 
-async function TemplateList({ companyId }: { companyId: string }) {
-  let templates: Awaited<ReturnType<typeof listDocusignTemplates>> = [];
-  let loadError: string | null = null;
+async function TemplateList({
+  companyId,
+  docusignConnected,
+  pandadocConnected,
+}: {
+  companyId: string;
+  docusignConnected: boolean;
+  pandadocConnected: boolean;
+}) {
+  const templates: UnifiedTemplate[] = [];
+  const errors: string[] = [];
 
-  try {
-    templates = await listDocusignTemplates(companyId);
-  } catch (err) {
-    loadError = err instanceof Error ? err.message : "Failed to load templates.";
-  }
+  await Promise.all([
+    docusignConnected
+      ? listDocusignTemplates(companyId)
+          .then((list) => {
+            templates.push(
+              ...list.map((t) => ({
+                id: t.templateId,
+                name: t.name,
+                created: t.created,
+                source: "docusign" as const,
+              }))
+            );
+          })
+          .catch((err) => {
+            errors.push(err instanceof Error ? err.message : "Failed to load DocuSign templates.");
+          })
+      : Promise.resolve(),
+    pandadocConnected
+      ? listPandaDocTemplates(companyId)
+          .then((list) => {
+            templates.push(
+              ...(list ?? []).map((t) => ({
+                id: t.id,
+                name: t.name,
+                created: t.dateCreated,
+                source: "pandadoc" as const,
+              }))
+            );
+          })
+          .catch((err) => {
+            errors.push(err instanceof Error ? err.message : "Failed to load PandaDoc templates.");
+          })
+      : Promise.resolve(),
+  ]);
 
-  if (loadError) {
+  if (errors.length > 0) {
     return (
       <div className="rounded-[14px] border border-line bg-surface p-6">
-        <p className="text-sm text-red-400">{loadError}</p>
+        {errors.map((err) => (
+          <p key={err} className="text-sm text-red-400">
+            {err}
+          </p>
+        ))}
       </div>
     );
   }
@@ -66,8 +148,8 @@ async function TemplateList({ companyId }: { companyId: string }) {
       <div className="rounded-[14px] border border-line bg-surface p-6">
         <h2 className="text-base font-bold">No templates yet</h2>
         <p className="mt-1 max-w-lg text-sm leading-relaxed text-muted">
-          DocuSign is connected, but there are no templates in this account
-          yet. Create one in DocuSign and it&apos;ll show up here.
+          You&apos;re connected, but there are no templates in that account
+          yet. Create one there and it&apos;ll show up here.
         </p>
       </div>
     );
@@ -77,7 +159,7 @@ async function TemplateList({ companyId }: { companyId: string }) {
     <div className="overflow-hidden rounded-[14px] border border-line bg-surface">
       {templates.map((template) => (
         <div
-          key={template.templateId}
+          key={`${template.source}-${template.id}`}
           className="flex items-center justify-between border-b border-line px-5 py-4 last:border-b-0"
         >
           <div>
@@ -88,6 +170,9 @@ async function TemplateList({ companyId }: { companyId: string }) {
               </div>
             )}
           </div>
+          <span className="rounded-full border border-line px-2 py-0.5 font-mono text-[9.5px] uppercase tracking-wide text-muted">
+            {SOURCE_LABEL[template.source]}
+          </span>
         </div>
       ))}
     </div>

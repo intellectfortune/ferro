@@ -19,6 +19,7 @@ const ALL_PROVIDERS: { provider: ConnectionProvider; label: string }[] = [
   { provider: "google_ads", label: "Google Ads" },
   { provider: "meta_ads", label: "Meta Ads" },
   { provider: "docusign", label: "DocuSign" },
+  { provider: "pandadoc", label: "PandaDoc" },
 ];
 
 export async function listConnectionStatuses() {

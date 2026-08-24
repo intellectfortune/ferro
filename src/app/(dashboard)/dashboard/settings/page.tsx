@@ -26,11 +26,13 @@ function SectionCard({
 const CONNECT_HREF: Partial<Record<string, string>> = {
   docusign: "/api/docusign/authorize",
   bouncie: "/api/bouncie/authorize",
+  pandadoc: "/api/pandadoc/authorize",
 };
 
 const PROVIDER_LABEL: Partial<Record<string, string>> = {
   docusign: "DocuSign",
   bouncie: "Bouncie",
+  pandadoc: "PandaDoc",
 };
 
 function ConnectionStatusBanner({
@@ -63,6 +65,7 @@ export default async function SettingsPage({
   searchParams: Promise<{
     docusign?: string;
     bouncie?: string;
+    pandadoc?: string;
     message?: string;
   }>;
 }) {
@@ -70,7 +73,12 @@ export default async function SettingsPage({
   if (!profile) redirect("/login");
   if (!canManageVehicles(profile.role)) redirect("/dashboard");
 
-  const { docusign: docusignStatus, bouncie: bouncieStatus, message } = await searchParams;
+  const {
+    docusign: docusignStatus,
+    bouncie: bouncieStatus,
+    pandadoc: pandadocStatus,
+    message,
+  } = await searchParams;
 
   const [company, connections, revenue, revenueLastMonth, invoices] = await Promise.all([
     getCompanyDetails(profile.company_id),
@@ -101,6 +109,9 @@ export default async function SettingsPage({
       )}
       {bouncieStatus && (
         <ConnectionStatusBanner provider="bouncie" status={bouncieStatus} message={message} />
+      )}
+      {pandadocStatus && (
+        <ConnectionStatusBanner provider="pandadoc" status={pandadocStatus} message={message} />
       )}
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
