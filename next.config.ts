@@ -18,7 +18,11 @@ const CSP = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: blob: https://*.supabase.co https://maps.googleapis.com https://maps.gstatic.com",
   "font-src 'self' data: https://fonts.gstatic.com",
-  `connect-src 'self' https://*.supabase.co https://maps.googleapis.com${isDev ? " ws://localhost:* ws://100.105.166.83:*" : ""}`,
+  // wss:// is required alongside https:// — Supabase Realtime (team chat)
+  // connects over a WebSocket, and CSP treats that as a distinct scheme
+  // from https:// even for the same host, so omitting it silently blocks
+  // the connection.
+  `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://maps.googleapis.com${isDev ? " ws://localhost:* ws://100.105.166.83:*" : ""}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

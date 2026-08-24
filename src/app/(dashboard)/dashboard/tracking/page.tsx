@@ -96,10 +96,10 @@ export default async function TrackingPage() {
               {vehicles.map((vehicle) => (
                 <div
                   key={vehicle.id}
-                  className="flex items-center justify-between rounded-[9px] border border-line px-3.5 py-3"
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-[9px] border border-line px-3.5 py-3"
                 >
-                  <div>
-                    <div className="text-[13px] font-medium">
+                  <div className="min-w-0">
+                    <div className="truncate text-[13px] font-medium">
                       {vehicle.make} {vehicle.model}
                     </div>
                     <div className="text-xs text-muted">{vehicle.color ?? "—"}</div>

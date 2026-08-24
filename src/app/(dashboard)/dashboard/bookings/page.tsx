@@ -58,26 +58,26 @@ export default async function BookingsPage() {
               <Link
                 key={booking.id}
                 href={`/dashboard/bookings/${booking.id}`}
-                className="flex items-center gap-4 border-b border-line px-5 py-4 transition last:border-0 hover:bg-surface-2"
+                className="flex flex-wrap items-center gap-3 border-b border-line px-5 py-4 transition last:border-0 hover:bg-surface-2 sm:flex-nowrap sm:gap-4"
               >
-                <div className="flex-1">
-                  <div className="text-[14.5px] font-semibold">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[14.5px] font-semibold">
                     {booking.customer_name}
                   </div>
-                  <div className="mt-0.5 text-[12.5px] text-muted">
+                  <div className="mt-0.5 truncate text-[12.5px] text-muted">
                     {vehicle ? `${vehicle.make} ${vehicle.model}` : ""} ·{" "}
                     {formatRange(booking.start_at, booking.end_at)}
                   </div>
                 </div>
                 <span
-                  className={`rounded-full px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wide ${
+                  className={`flex-shrink-0 rounded-full px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wide ${
                     STATUS_STYLE[booking.status] ?? "bg-surface-2 text-muted"
                   }`}
                 >
                   {STATUS_LABEL[booking.status] ?? booking.status}
                 </span>
                 {booking.total_price && (
-                  <span className="font-mono text-sm font-bold">
+                  <span className="flex-shrink-0 font-mono text-sm font-bold">
                     ${booking.total_price}
                   </span>
                 )}

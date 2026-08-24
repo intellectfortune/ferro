@@ -88,12 +88,12 @@ export default async function DocumentsPage() {
                     {CATEGORY_LABEL[doc.category] ?? doc.category}
                   </span>
                 </a>
-                <div className="flex items-center justify-between px-4 py-3">
-                  <div>
-                    <div className="text-[13.5px] font-semibold">
+                <div className="flex items-center gap-2 px-4 py-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[13.5px] font-semibold">
                       {vehicle ? `${vehicle.make} ${vehicle.model}` : ""}
                     </div>
-                    <div className="text-xs text-muted">
+                    <div className="truncate text-xs text-muted">
                       {doc.uploaderName} ·{" "}
                       {new Intl.DateTimeFormat("en-US", {
                         month: "short",
@@ -101,7 +101,9 @@ export default async function DocumentsPage() {
                       }).format(new Date(doc.created_at))}
                     </div>
                   </div>
-                  <DeleteDocumentButton documentId={doc.id} vehicleId={doc.vehicle_id} />
+                  <div className="flex-shrink-0">
+                    <DeleteDocumentButton documentId={doc.id} vehicleId={doc.vehicle_id} />
+                  </div>
                 </div>
               </div>
             );

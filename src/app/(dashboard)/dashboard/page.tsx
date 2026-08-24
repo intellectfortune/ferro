@@ -190,16 +190,16 @@ export default async function DashboardPage() {
                     <path d="M6.5 12l1.8 1.8L11 10.5" />
                   </svg>
                 </div>
-                <div className="flex-1">
-                  <div className="text-[13.5px] font-medium">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[13.5px] font-medium">
                     {booking.status === "inquiry" ? "Inquiry" : "Booking"} —{" "}
                     {booking.customer_name}
                   </div>
-                  <div className="text-xs text-muted">
+                  <div className="truncate text-xs text-muted">
                     {vehicle ? `${vehicle.make} ${vehicle.model}` : ""}
                   </div>
                 </div>
-                <div className="font-mono text-[11.5px] text-muted">
+                <div className="flex-shrink-0 font-mono text-[11.5px] text-muted">
                   {timeAgo(booking.created_at)}
                 </div>
               </Link>

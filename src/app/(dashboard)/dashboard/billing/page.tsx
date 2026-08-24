@@ -215,32 +215,34 @@ export default async function BillingPage() {
             return (
               <div
                 key={invoice.id}
-                className="flex items-center gap-4 border-b border-line px-5 py-4 last:border-0"
+                className="flex flex-wrap items-center gap-3 border-b border-line px-5 py-4 last:border-0 sm:flex-nowrap sm:gap-4"
               >
-                <div className="flex-1">
-                  <div className="text-[13.5px] font-semibold">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[13.5px] font-semibold">
                     {booking?.customer_name ?? "Unknown customer"}
                   </div>
-                  <div className="text-xs text-muted">
+                  <div className="truncate text-xs text-muted">
                     {booking?.vehicles
                       ? `${booking.vehicles.make} ${booking.vehicles.model}`
                       : ""}
                   </div>
                 </div>
                 <span
-                  className={`rounded-full px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wide ${
+                  className={`flex-shrink-0 rounded-full px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wide ${
                     STATUS_STYLE[invoice.status] ?? "bg-surface-2 text-muted"
                   }`}
                 >
                   {invoice.status}
                 </span>
-                <span className="font-mono text-sm font-bold">${invoice.amount}</span>
+                <span className="flex-shrink-0 font-mono text-sm font-bold">
+                  ${invoice.amount}
+                </span>
                 {invoice.hosted_invoice_url && (
                   <a
                     href={invoice.hosted_invoice_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="font-mono text-xs text-muted hover:text-amber-text"
+                    className="flex-shrink-0 font-mono text-xs text-muted hover:text-amber-text"
                   >
                     View →
                   </a>

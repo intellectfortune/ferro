@@ -34,20 +34,20 @@ export function MemberRow({
     .toUpperCase();
 
   return (
-    <div className="flex items-center gap-4 border-b border-line px-5 py-4 last:border-0">
+    <div className="flex flex-wrap items-center gap-3 border-b border-line px-5 py-4 last:border-0 sm:flex-nowrap sm:gap-4">
       <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[9px] bg-amber font-mono text-xs font-bold text-on-amber">
         {initials}
       </div>
-      <div className="flex-1">
-        <div className="text-[13.5px] font-semibold">
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-[13.5px] font-semibold">
           {fullName ?? email} {isSelf && <span className="text-muted">(you)</span>}
         </div>
-        <div className="text-xs text-muted">{email}</div>
+        <div className="truncate text-xs text-muted">{email}</div>
         {state.error && <p className="text-xs text-red-400">{state.error}</p>}
       </div>
 
       {canManage && !isSelf ? (
-        <form action={formAction} className="flex items-center gap-2">
+        <form action={formAction} className="flex flex-shrink-0 items-center gap-2">
           <select
             name="role"
             defaultValue={role}
@@ -60,13 +60,14 @@ export function MemberRow({
           </select>
         </form>
       ) : (
-        <span className="rounded-full bg-amber-soft px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wide text-amber-text">
+        <span className="flex-shrink-0 rounded-full bg-amber-soft px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wide text-amber-text">
           {role}
         </span>
       )}
 
       {canManage && !isSelf && (
         <form
+          className="flex-shrink-0"
           action={removeMember.bind(null, id)}
           onSubmit={(e) => {
             if (!confirm(`Remove ${fullName ?? email} from the team?`)) {
