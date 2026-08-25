@@ -87,7 +87,7 @@ export default async function DashboardLayout({
             </div>
           </div>
         </header>
-        <main className="flex-1 px-6 pb-16 md:px-10">{children}</main>
+        <main className="flex-1 px-6 pb-16 pt-6 md:px-10 md:pt-10">{children}</main>
         <Footer />
       </div>
     </div>
