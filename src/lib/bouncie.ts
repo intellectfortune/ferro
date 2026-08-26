@@ -1,4 +1,5 @@
 import { createServiceClient } from "@/lib/supabase/service";
+import { getSiteUrl } from "@/lib/site-url";
 
 const AUTHORIZE_URL = "https://auth.bouncie.com/dialog/authorize";
 const TOKEN_URL = "https://auth.bouncie.com/oauth/token";
@@ -12,13 +13,12 @@ type BouncieCredentials = {
 
 export function bouncieAuthorizeUrl(state: string) {
   const clientId = process.env.BOUNCIE_CLIENT_ID;
-  const redirectUri = process.env.BOUNCIE_REDIRECT_URI;
-  if (!clientId || !redirectUri) {
-    throw new Error("BOUNCIE_CLIENT_ID / BOUNCIE_REDIRECT_URI are not set.");
+  if (!clientId) {
+    throw new Error("BOUNCIE_CLIENT_ID is not set.");
   }
   const url = new URL(AUTHORIZE_URL);
   url.searchParams.set("client_id", clientId);
-  url.searchParams.set("redirect_uri", redirectUri);
+  url.searchParams.set("redirect_uri", `${getSiteUrl()}/api/bouncie/callback`);
   url.searchParams.set("response_type", "code");
   url.searchParams.set("state", state);
   return url;
@@ -54,11 +54,10 @@ async function requestToken(body: Record<string, string>) {
 function clientCreds() {
   const clientId = process.env.BOUNCIE_CLIENT_ID;
   const clientSecret = process.env.BOUNCIE_CLIENT_SECRET;
-  const redirectUri = process.env.BOUNCIE_REDIRECT_URI;
-  if (!clientId || !clientSecret || !redirectUri) {
+  if (!clientId || !clientSecret) {
     throw new Error("Bouncie env vars are not fully set.");
   }
-  return { clientId, clientSecret, redirectUri };
+  return { clientId, clientSecret, redirectUri: `${getSiteUrl()}/api/bouncie/callback` };
 }
 
 /** Called once from /api/bouncie/callback with the code from the redirect. */

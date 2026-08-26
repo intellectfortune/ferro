@@ -1,4 +1,5 @@
 import { createServiceClient } from "@/lib/supabase/service";
+import { getSiteUrl } from "@/lib/site-url";
 
 const AUTHORIZE_URL = "https://app.pandadoc.com/oauth2/authorize";
 const TOKEN_URL = "https://api.pandadoc.com/oauth2/access_token";
@@ -13,11 +14,10 @@ type PandaDocCredentials = {
 function clientCreds() {
   const clientId = process.env.PANDADOC_CLIENT_ID;
   const clientSecret = process.env.PANDADOC_CLIENT_SECRET;
-  const redirectUri = process.env.PANDADOC_REDIRECT_URI;
-  if (!clientId || !clientSecret || !redirectUri) {
+  if (!clientId || !clientSecret) {
     throw new Error("PandaDoc env vars are not fully set.");
   }
-  return { clientId, clientSecret, redirectUri };
+  return { clientId, clientSecret, redirectUri: `${getSiteUrl()}/api/pandadoc/callback` };
 }
 
 export function pandadocAuthorizeUrl(state: string) {

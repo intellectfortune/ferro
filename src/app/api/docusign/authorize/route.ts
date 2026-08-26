@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getCurrentProfile, canManageVehicles } from "@/lib/actions/profile";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { getSiteUrl } from "@/lib/site-url";
 
 const STATE_COOKIE = "docusign_oauth_state";
 
@@ -19,13 +20,13 @@ export async function GET() {
 
   const integrationKey = process.env.DOCUSIGN_INTEGRATION_KEY;
   const authServerHost = process.env.DOCUSIGN_AUTH_SERVER;
-  const redirectUri = process.env.DOCUSIGN_REDIRECT_URI;
-  if (!integrationKey || !authServerHost || !redirectUri) {
+  if (!integrationKey || !authServerHost) {
     return NextResponse.json(
       { error: "DocuSign is not configured." },
       { status: 500 }
     );
   }
+  const redirectUri = `${getSiteUrl()}/api/docusign/callback`;
 
   const state = crypto.randomUUID();
   const cookieStore = await cookies();
