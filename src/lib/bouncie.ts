@@ -135,17 +135,15 @@ const inFlightRefresh = new Map<string, Promise<BouncieCredentials>>();
  * refreshing it first if it's expired or about to be. Returns null if
  * the company hasn't connected Bouncie.
  */
-async function getValidAccessToken(companyId: string, forceRefresh = false) {
+async function getValidAccessToken(companyId: string) {
   const existingRefresh = inFlightRefresh.get(companyId);
   if (existingRefresh) return (await existingRefresh).access_token;
 
   const credentials = await getStoredCredentials(companyId);
   if (!credentials) return null;
 
-  if (!forceRefresh) {
-    const expiresInMs = new Date(credentials.expires_at).getTime() - Date.now();
-    if (expiresInMs > 120_000) return credentials.access_token;
-  }
+  const expiresInMs = new Date(credentials.expires_at).getTime() - Date.now();
+  if (expiresInMs > 120_000) return credentials.access_token;
 
   const refreshPromise = refreshAndStore(companyId, credentials.refresh_token).finally(() => {
     inFlightRefresh.delete(companyId);
@@ -160,13 +158,8 @@ async function getValidAccessToken(companyId: string, forceRefresh = false) {
  * GET against the Bouncie REST API, authenticated for this company.
  * Returns null if the company hasn't connected Bouncie.
  */
-async function bouncieGet<T>(
-  companyId: string,
-  path: string,
-  params?: Record<string, string>,
-  isRetry = false
-): Promise<T | null> {
-  const accessToken = await getValidAccessToken(companyId, isRetry);
+async function bouncieGet<T>(companyId: string, path: string, params?: Record<string, string>) {
+  const accessToken = await getValidAccessToken(companyId);
   if (!accessToken) return null;
 
   const url = new URL(`${API_BASE_URL}${path}`);
@@ -177,15 +170,6 @@ async function bouncieGet<T>(
   // Per Bouncie's docs: the Authorization header is the raw access
   // token, no "Bearer" prefix — that's their #1 FAQ'd 401 cause.
   const res = await fetch(url, { headers: { Authorization: accessToken } });
-
-  if (res.status === 401 && !isRetry) {
-    // Our stored expiry said this token was still good, but Bouncie
-    // rejected it anyway — most likely a token that was refreshed just
-    // before this request and hasn't finished propagating on Bouncie's
-    // side yet (seen right after a stale/first-of-session token gets
-    // refreshed). Force a fresh refresh and retry once before giving up.
-    return bouncieGet<T>(companyId, path, params, true);
-  }
 
   if (!res.ok) {
     throw new Error(`Bouncie API error (${res.status}): ${await res.text()}`);

@@ -58,6 +58,14 @@ async function clientIp() {
 
 let warnedMissingConfig = false;
 
+// A rate-limit check exists to protect the app — it must never become the
+// reason the app is unreachable. If Upstash is slow or down, fail open
+// (same as missing config) rather than hang the request indefinitely:
+// signIn() and every "sensitive"-tier action call this before doing
+// anything else, so an unbounded await here blocks sign-in/sign-up/
+// billing actions/etc. entirely with no error, just a permanent spinner.
+const REDIS_TIMEOUT_MS = 3_000;
+
 export type RateLimitResult = { ok: true } | { ok: false; error: string };
 
 /**
@@ -65,10 +73,10 @@ export type RateLimitResult = { ok: true } | { ok: false; error: string };
  * should be the user id for authenticated endpoints, or omitted to fall
  * back to the caller's IP for public ones.
  *
- * Fails open (allows the request) if Upstash isn't configured, logging a
- * one-time warning — same "degrade, don't crash" pattern as the rest of
- * this app's optional integrations. Once UPSTASH_REDIS_REST_URL/TOKEN are
- * set, it activates with no other code changes.
+ * Fails open (allows the request) if Upstash isn't configured, times out,
+ * or errors — logging a one-time warning for missing config and every
+ * failure otherwise. Once UPSTASH_REDIS_REST_URL/TOKEN are set, it
+ * activates with no other code changes.
  */
 export async function checkRateLimit(
   tier: RateLimitTier,
@@ -86,10 +94,21 @@ export async function checkRateLimit(
   }
 
   const id = identifier ?? (await clientIp());
-  const { success } = await limiter.limit(id);
 
-  if (!success) {
-    return { ok: false, error: "Too many requests — please slow down and try again shortly." };
+  try {
+    const { success } = await Promise.race([
+      limiter.limit(id),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Rate limit check timed out")), REDIS_TIMEOUT_MS)
+      ),
+    ]);
+
+    if (!success) {
+      return { ok: false, error: "Too many requests — please slow down and try again shortly." };
+    }
+    return { ok: true };
+  } catch (err) {
+    console.error(`[rate-limit] Upstash check failed for tier "${tier}", failing open:`, err);
+    return { ok: true };
   }
-  return { ok: true };
 }
