@@ -94,7 +94,7 @@ export default async function TrackingPage() {
       </p>
 
       <div className="mb-5 grid grid-cols-1 gap-5 lg:grid-cols-3">
-        <div className="rounded-[14px] border border-line bg-surface p-6 lg:col-span-1">
+        <div className="order-2 rounded-[14px] border border-line bg-surface p-6 lg:order-1 lg:col-span-1">
           <h2 className="mb-4 text-sm font-semibold">Fleet</h2>
           {vehicles.length === 0 ? (
             <p className="text-sm text-muted">No vehicles yet.</p>
@@ -113,37 +113,15 @@ export default async function TrackingPage() {
                   </div>
                   {vehicle.bouncie_imei ? (
                     (() => {
-                      const live = liveByImei.get(vehicle.bouncie_imei);
-                      const stats = live?.stats;
-                      const engineHealthy = !stats?.mil?.milOn;
-                      const batteryHealthy = (stats?.battery?.status ?? "normal") === "normal";
+                      const isRunning = liveByImei.get(vehicle.bouncie_imei)?.stats?.isRunning;
                       return (
-                        <div className="flex items-center gap-2">
-                          {stats?.fuelLevel != null && (
-                            <span
-                              title="Fuel level"
-                              className="flex items-center gap-1 font-mono text-[10.5px] text-muted"
-                            >
-                              <FuelIcon className="h-3 w-3" />
-                              {Math.round(stats.fuelLevel)}%
-                            </span>
-                          )}
-                          <span title={engineHealthy ? "Engine healthy" : "Check engine"}>
-                            <StatusIcon healthy={engineHealthy} size="sm" />
-                          </span>
-                          <span title={batteryHealthy ? "Battery healthy" : "Battery issue"}>
-                            <StatusIcon healthy={batteryHealthy} size="sm" />
-                          </span>
-                          <span
-                            className={`rounded-full px-2 py-0.5 font-mono text-[9.5px] font-bold uppercase tracking-wide ${
-                              stats?.isRunning
-                                ? "bg-amber-soft text-amber-text"
-                                : "bg-surface-2 text-muted"
-                            }`}
-                          >
-                            {stats?.isRunning ? "Running" : "Connected"}
-                          </span>
-                        </div>
+                        <span
+                          className={`rounded-full px-2 py-0.5 font-mono text-[9.5px] font-bold uppercase tracking-wide ${
+                            isRunning ? "bg-amber-soft text-amber-text" : "bg-surface-2 text-muted"
+                          }`}
+                        >
+                          {isRunning ? "Running" : "Connected"}
+                        </span>
                       );
                     })()
                   ) : (
@@ -160,8 +138,45 @@ export default async function TrackingPage() {
           )}
         </div>
 
-        <div className="rounded-[14px] border border-line bg-surface p-6 lg:col-span-2">
+        <div className="order-1 rounded-[14px] border border-line bg-surface p-6 lg:order-2 lg:col-span-2">
           <h2 className="mb-4 text-sm font-semibold">Live locations</h2>
+          {bouncieConnected && !liveError && connectedVehicles.length > 0 && (
+            <div className="mb-4 space-y-2">
+              {connectedVehicles.map((vehicle) => {
+                const live = liveByImei.get(vehicle.bouncie_imei!);
+                const stats = live?.stats;
+                const engineHealthy = !stats?.mil?.milOn;
+                const batteryHealthy = (stats?.battery?.status ?? "normal") === "normal";
+                return (
+                  <div
+                    key={vehicle.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-[9px] border border-line px-3.5 py-2.5"
+                  >
+                    <div className="min-w-0 truncate text-[13px] font-medium">
+                      {vehicle.make} {vehicle.model}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {stats?.fuelLevel != null && (
+                        <span
+                          title="Fuel level"
+                          className="flex items-center gap-1 font-mono text-[10.5px] text-muted"
+                        >
+                          <FuelIcon className="h-3 w-3" />
+                          {Math.round(stats.fuelLevel)}%
+                        </span>
+                      )}
+                      <span title={engineHealthy ? "Engine healthy" : "Check engine"}>
+                        <StatusIcon healthy={engineHealthy} size="sm" />
+                      </span>
+                      <span title={batteryHealthy ? "Battery healthy" : "Battery issue"}>
+                        <StatusIcon healthy={batteryHealthy} size="sm" />
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
           {!bouncieConnected ? (
             <div className="flex aspect-[16/9] items-center justify-center rounded-[9px] border border-dashed border-line bg-surface-2 text-center">
               <div className="max-w-xs px-4">
