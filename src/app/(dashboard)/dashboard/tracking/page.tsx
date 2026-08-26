@@ -40,17 +40,24 @@ export default async function TrackingPage() {
   if (bouncieConnected) {
     try {
       liveVehicles = await listBouncieVehicles(profile.company_id);
-      const tripLists = await Promise.all(
+    } catch (err) {
+      liveError = err instanceof Error ? err.message : "Failed to load Bouncie data.";
+    }
+
+    if (!liveError) {
+      // Settled rather than all-or-nothing: one vehicle's trip history
+      // failing to load shouldn't blank out the live map/status for every
+      // other vehicle that loaded fine.
+      const tripLists = await Promise.allSettled(
         connectedVehicles
           .slice(0, 5)
           .map((v) => listBouncieTrips(profile.company_id, v.bouncie_imei!))
       );
       recentTrips = tripLists
-        .flatMap((trips) => trips ?? [])
+        .filter((result) => result.status === "fulfilled")
+        .flatMap((result) => result.value ?? [])
         .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
         .slice(0, 5);
-    } catch (err) {
-      liveError = err instanceof Error ? err.message : "Failed to load Bouncie data.";
     }
   }
 
