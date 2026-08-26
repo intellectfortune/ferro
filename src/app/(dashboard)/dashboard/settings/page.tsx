@@ -4,6 +4,7 @@ import { getCurrentProfile, canManageVehicles } from "@/lib/actions/profile";
 import { getCompanyDetails, listConnectionStatuses } from "@/lib/queries/settings";
 import { sumRevenueThisMonth, sumRevenueLastMonth, listInvoices } from "@/lib/queries/invoices";
 import { CompanyProfileForm } from "./company-profile-form";
+import { DisconnectButton } from "./disconnect-button";
 
 function SectionCard({
   title,
@@ -176,9 +177,21 @@ export default async function SettingsPage({
               >
                 <span className="text-sm font-medium">{connection.label}</span>
                 {connection.status === "connected" ? (
-                  <span className="rounded-full bg-amber-soft px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wide text-amber-text">
-                    Connected
-                  </span>
+                  CONNECT_HREF[connection.provider] ? (
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-full bg-amber-soft px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wide text-amber-text">
+                        Connected
+                      </span>
+                      <DisconnectButton
+                        provider={connection.provider}
+                        label={connection.label}
+                      />
+                    </div>
+                  ) : (
+                    <span className="rounded-full bg-amber-soft px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wide text-amber-text">
+                      Connected
+                    </span>
+                  )
                 ) : CONNECT_HREF[connection.provider] ? (
                   <Link
                     href={CONNECT_HREF[connection.provider]!}

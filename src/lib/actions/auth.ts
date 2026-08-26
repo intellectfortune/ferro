@@ -74,7 +74,9 @@ export async function signUpOwner(
     return { error: null };
   }
 
-  await ensureCompanyProvisioned();
+  if (signUpData.user) {
+    await ensureCompanyProvisioned(signUpData.user);
+  }
 
   redirect("/dashboard");
 }

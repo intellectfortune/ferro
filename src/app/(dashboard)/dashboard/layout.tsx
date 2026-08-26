@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/actions/profile";
 import { ensureCompanyProvisioned } from "@/lib/actions/provision";
 import { signOut } from "@/lib/actions/auth";
 import { SidebarNav } from "@/components/sidebar-nav";
@@ -12,35 +13,42 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) {
     redirect("/login");
   }
 
-  await ensureCompanyProvisioned();
+  const profileQuery = () =>
+    supabase
+      .from("profiles")
+      .select("full_name, role, company_id, companies(name)")
+      .eq("id", user.id)
+      .single();
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, role, company_id, companies(name)")
-    .eq("id", user.id)
-    .single();
+  let { data: profile } = await profileQuery();
+
+  // Only a brand-new owner's very first dashboard visit hits this path —
+  // provisioning their company on demand — so it's fine to pay for a
+  // second profile fetch here specifically, rather than doing an
+  // existence check (and its own separate auth.getUser() call) on every
+  // single page load for everyone.
+  if (!profile) {
+    await ensureCompanyProvisioned(user);
+    ({ data: profile } = await profileQuery());
+  }
 
   if (!profile) {
     redirect("/signup");
   }
 
-  const { count: vehicleCount } = await supabase
-    .from("vehicles")
-    .select("id", { count: "exact", head: true });
-
-  const { count: newInquiryCount } = await supabase
-    .from("inquiries")
-    .select("id", { count: "exact", head: true })
-    .eq("status", "new");
+  const [{ count: vehicleCount }, { count: newInquiryCount }] = await Promise.all([
+    supabase.from("vehicles").select("id", { count: "exact", head: true }),
+    supabase
+      .from("inquiries")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "new"),
+  ]);
 
   const companyName = (profile.companies as unknown as { name: string } | null)
     ?.name;

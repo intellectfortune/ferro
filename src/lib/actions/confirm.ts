@@ -13,7 +13,7 @@ export async function confirmEmail(
   next: string
 ): Promise<ConfirmActionState> {
   const supabase = await createClient();
-  const { error } = await supabase.auth.verifyOtp({
+  const { data, error } = await supabase.auth.verifyOtp({
     type,
     token_hash: tokenHash,
   });
@@ -22,6 +22,8 @@ export async function confirmEmail(
     return { error: error.message };
   }
 
-  await ensureCompanyProvisioned();
+  if (data.user) {
+    await ensureCompanyProvisioned(data.user);
+  }
   redirect(next);
 }
