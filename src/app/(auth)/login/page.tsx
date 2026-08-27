@@ -62,6 +62,12 @@ export default function LoginPage() {
             Create a company
           </Link>
         </p>
+        <p className="mt-2 text-sm text-paper/60">
+          Need to join a company?{" "}
+          <Link href="/join" className="text-amber-text hover:underline">
+            Enter a join code
+          </Link>
+        </p>
       </div>
     </main>
   );

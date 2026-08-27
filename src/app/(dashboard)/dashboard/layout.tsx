@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/actions/profile";
 import { ensureCompanyProvisioned } from "@/lib/actions/provision";
+import { hasPendingJoinRequest } from "@/lib/actions/join";
 import { signOut } from "@/lib/actions/auth";
 import { SidebarNav } from "@/components/sidebar-nav";
 import { MobileMenuButton } from "@/components/mobile-menu-button";
@@ -39,6 +40,9 @@ export default async function DashboardLayout({
   }
 
   if (!profile) {
+    if (await hasPendingJoinRequest(user.id)) {
+      redirect("/join/pending");
+    }
     redirect("/signup");
   }
 

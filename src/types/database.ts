@@ -44,6 +44,7 @@ export type InvoiceStatus = "draft" | "open" | "paid" | "void" | "uncollectible"
 export type InquirySource = "web_form" | "call" | "instagram_dm";
 export type TeamChatChannel = "general" | "bookings" | "maintenance";
 export type InquiryStatus = "new" | "contacted" | "closed";
+export type JoinRequestStatus = "pending" | "approved" | "denied";
 export type ContractStatus =
   | "draft"
   | "sent"
@@ -555,6 +556,46 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["pending_invites"]["Insert"]>;
         Relationships: [];
       };
+      company_join_codes: {
+        Row: {
+          company_id: string;
+          code: string;
+          regenerated_at: string;
+        };
+        Insert: {
+          company_id: string;
+          code: string;
+          regenerated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["company_join_codes"]["Insert"]>;
+        Relationships: [];
+      };
+      company_join_requests: {
+        Row: {
+          id: string;
+          company_id: string;
+          user_id: string;
+          email: string;
+          full_name: string | null;
+          status: JoinRequestStatus;
+          requested_at: string;
+          decided_at: string | null;
+          decided_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          user_id: string;
+          email: string;
+          full_name?: string | null;
+          status?: JoinRequestStatus;
+          requested_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["company_join_requests"]["Insert"]>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -578,6 +619,19 @@ export interface Database {
         Args: { target_email: string };
         Returns: string | null;
       };
+      resolve_join_code: {
+        Args: { input_code: string };
+        Returns: { company_id: string; company_name: string }[];
+      };
+      list_pending_join_requests: {
+        Args: Record<string, never>;
+        Returns: {
+          id: string;
+          email: string;
+          full_name: string | null;
+          requested_at: string;
+        }[];
+      };
     };
     Enums: {
       user_role: UserRole;
@@ -595,6 +649,7 @@ export interface Database {
       inquiry_source: InquirySource;
       inquiry_status: InquiryStatus;
       team_chat_channel: TeamChatChannel;
+      join_request_status: JoinRequestStatus;
     };
     CompositeTypes: Record<string, never>;
   };
