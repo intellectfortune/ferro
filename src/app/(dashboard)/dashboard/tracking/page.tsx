@@ -178,7 +178,7 @@ export default async function TrackingPage() {
             </div>
           )}
           {!bouncieConnected ? (
-            <div className="flex h-[210px] lg:h-[420px] items-center justify-center rounded-[9px] border border-dashed border-line bg-surface-2 text-center">
+            <div className="flex h-[210px] lg:h-[640px] items-center justify-center rounded-[9px] border border-dashed border-line bg-surface-2 text-center">
               <div className="max-w-xs px-4">
                 <p className="text-sm font-medium">Bouncie isn&apos;t connected yet</p>
                 <p className="mt-1.5 text-xs text-muted">
@@ -193,7 +193,7 @@ export default async function TrackingPage() {
           ) : liveError ? (
             <p className="text-sm text-red-400">{liveError}</p>
           ) : connectedVehicles.length === 0 ? (
-            <div className="flex h-[210px] lg:h-[420px] items-center justify-center rounded-[9px] border border-dashed border-line bg-surface-2 text-center">
+            <div className="flex h-[210px] lg:h-[640px] items-center justify-center rounded-[9px] border border-dashed border-line bg-surface-2 text-center">
               <div className="max-w-xs px-4">
                 <p className="text-sm font-medium">No vehicles linked yet</p>
                 <p className="mt-1.5 text-xs text-muted">
@@ -229,7 +229,7 @@ export default async function TrackingPage() {
               </p>
             </div>
           ) : mapMarkers.length === 0 ? (
-            <div className="flex h-[210px] lg:h-[420px] items-center justify-center rounded-[9px] border border-dashed border-line bg-surface-2 text-center">
+            <div className="flex h-[210px] lg:h-[640px] items-center justify-center rounded-[9px] border border-dashed border-line bg-surface-2 text-center">
               <p className="max-w-xs px-4 text-sm text-muted">
                 Linked vehicles haven&apos;t reported a location yet.
               </p>
