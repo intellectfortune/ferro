@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { listCalendarItems, type CalendarItem } from "@/lib/queries/calendar";
 import { listVehiclesForSelect } from "@/lib/queries/bookings";
-import { getCurrentProfile, canManageVehicles } from "@/lib/actions/profile";
+import { getCurrentProfile, isFleetManagerOrAbove } from "@/lib/actions/profile";
 import { AddEventButton } from "./add-event-button";
 import { EventPill } from "./event-pill";
 
@@ -66,7 +66,7 @@ export default async function CalendarPage({
   ]);
 
   const grouped = itemsByDay(items, days);
-  const canDelete = canManageVehicles(profile?.role);
+  const canDelete = isFleetManagerOrAbove(profile?.role);
 
   const monthLabel = new Intl.DateTimeFormat("en-US", {
     month: "long",

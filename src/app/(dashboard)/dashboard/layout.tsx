@@ -73,7 +73,7 @@ export default async function DashboardLayout({
               </h1>
               <div className="mt-1 flex items-center gap-2 text-[13px] text-muted">
                 <span className="font-mono uppercase tracking-wide rounded-full bg-amber-soft px-2 py-0.5 text-[10.5px] font-bold text-amber-text">
-                  {profile.role}
+                  {profile.role.replace("_", " ")}
                 </span>
                 {profile.full_name && (
                   <span className="hidden truncate sm:inline">{profile.full_name}</span>

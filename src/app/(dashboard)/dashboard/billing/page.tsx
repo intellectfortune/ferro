@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getCurrentProfile, canManageVehicles } from "@/lib/actions/profile";
+import { getCurrentProfile, isFleetManagerOrAbove } from "@/lib/actions/profile";
 import {
   listInvoices,
   listInvoiceableBookings,
@@ -48,7 +48,7 @@ function SectionCard({
 export default async function BillingPage() {
   const profile = await getCurrentProfile();
   if (!profile) redirect("/login");
-  if (!canManageVehicles(profile.role)) redirect("/dashboard");
+  if (!isFleetManagerOrAbove(profile.role)) redirect("/dashboard");
 
   const [invoices, bookings, revenueSeries, breakdown, upcoming, topVehicles, statusCounts] =
     await Promise.all([

@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentProfile, canManageVehicles } from "@/lib/actions/profile";
+import { getCurrentProfile, isBrokerOrAbove, isFleetManagerOrAbove } from "@/lib/actions/profile";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import type { VehicleStatus } from "@/types/database";
@@ -32,8 +32,8 @@ export async function createVehicle(
   formData: FormData
 ): Promise<VehicleActionState> {
   const profile = await getCurrentProfile();
-  if (!profile || !canManageVehicles(profile.role)) {
-    return { error: "You don't have permission to add vehicles." };
+  if (!profile) {
+    return { error: "You must be signed in to add vehicles." };
   }
 
   const fields = vehicleFieldsFromFormData(formData);
@@ -66,7 +66,7 @@ export async function updateVehicle(
   formData: FormData
 ): Promise<VehicleActionState> {
   const profile = await getCurrentProfile();
-  if (!profile || !canManageVehicles(profile.role)) {
+  if (!profile || !isBrokerOrAbove(profile.role)) {
     return { error: "You don't have permission to edit vehicles." };
   }
 
@@ -92,7 +92,7 @@ export async function updateVehicle(
 
 export async function deleteVehicle(vehicleId: string) {
   const profile = await getCurrentProfile();
-  if (!profile || !canManageVehicles(profile.role)) {
+  if (!profile || !isFleetManagerOrAbove(profile.role)) {
     throw new Error("You don't have permission to delete vehicles.");
   }
 

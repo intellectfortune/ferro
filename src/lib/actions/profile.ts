@@ -39,6 +39,18 @@ export async function getCurrentProfile() {
   return profile;
 }
 
-export function canManageVehicles(role: UserRole | undefined) {
-  return role === "owner" || role === "broker";
+/**
+ * Owner > Fleet Manager > Broker > Employee. Owner/Fleet Manager have full
+ * access (billing, company settings, team management, all deletes).
+ * Broker is operational (vehicles/bookings/calendar/documents/contracts,
+ * but no billing/settings/team, and can only delete bookings it created).
+ * Employee has the same day-to-day operational access as Broker minus
+ * vehicle edits and any delete rights.
+ */
+export function isFleetManagerOrAbove(role: UserRole | undefined) {
+  return role === "owner" || role === "fleet_manager";
+}
+
+export function isBrokerOrAbove(role: UserRole | undefined) {
+  return role === "owner" || role === "fleet_manager" || role === "broker";
 }

@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentProfile, canManageVehicles } from "@/lib/actions/profile";
+import { getCurrentProfile, isFleetManagerOrAbove } from "@/lib/actions/profile";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getStripe } from "@/lib/stripe";
 import { revalidatePath } from "next/cache";
@@ -41,7 +41,7 @@ async function insertInvoiceWithRetry(
 
 export async function fetchRevenueSeries(range: RevenueRange) {
   const profile = await getCurrentProfile();
-  if (!profile || !canManageVehicles(profile.role)) return [];
+  if (!profile || !isFleetManagerOrAbove(profile.role)) return [];
   return getRevenueSeries(range);
 }
 
@@ -50,7 +50,7 @@ export async function createInvoiceForBooking(
   formData: FormData
 ): Promise<InvoiceActionState> {
   const profile = await getCurrentProfile();
-  if (!profile || !canManageVehicles(profile.role)) {
+  if (!profile || !isFleetManagerOrAbove(profile.role)) {
     return { error: "You don't have permission to create invoices." };
   }
 

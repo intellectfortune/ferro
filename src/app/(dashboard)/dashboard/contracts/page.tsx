@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getCurrentProfile, canManageVehicles } from "@/lib/actions/profile";
+import { getCurrentProfile, isFleetManagerOrAbove } from "@/lib/actions/profile";
 import { listConnectionStatuses } from "@/lib/queries/settings";
 import { listDocusignTemplates } from "@/lib/docusign";
 import { listPandaDocTemplates } from "@/lib/pandadoc";
@@ -26,7 +26,7 @@ export default async function ContractsPage() {
     connections.find((c) => c.provider === "docusign")?.status === "connected";
   const pandadocConnected =
     connections.find((c) => c.provider === "pandadoc")?.status === "connected";
-  const canManage = canManageVehicles(profile.role);
+  const canManage = isFleetManagerOrAbove(profile.role);
 
   return (
     <div>

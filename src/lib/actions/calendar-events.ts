@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentProfile, canManageVehicles } from "@/lib/actions/profile";
+import { getCurrentProfile, isFleetManagerOrAbove } from "@/lib/actions/profile";
 import { revalidatePath } from "next/cache";
 import type { CalendarEventType } from "@/types/database";
 
@@ -58,7 +58,7 @@ export async function createCalendarEvent(
 
 export async function deleteCalendarEvent(eventId: string) {
   const profile = await getCurrentProfile();
-  if (!profile || !canManageVehicles(profile.role)) {
+  if (!profile || !isFleetManagerOrAbove(profile.role)) {
     throw new Error("You don't have permission to delete calendar events.");
   }
 

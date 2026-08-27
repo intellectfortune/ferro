@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getCurrentProfile, canManageVehicles } from "@/lib/actions/profile";
+import { getCurrentProfile, isFleetManagerOrAbove } from "@/lib/actions/profile";
 import { getBookingWithVehicle, listVehiclesForSelect } from "@/lib/queries/bookings";
 import { updateBooking } from "@/lib/actions/bookings";
 import { BookingForm } from "@/components/booking-form";
@@ -21,7 +21,11 @@ export default async function BookingDetailPage({
 
   if (!booking) notFound();
 
-  const canDelete = canManageVehicles(profile.role);
+  // Fleet Manager+ can delete any booking; Broker can only delete one it
+  // created itself; Employee can't delete bookings at all.
+  const canDelete =
+    isFleetManagerOrAbove(profile.role) ||
+    (profile.role === "broker" && booking.created_by === profile.id);
 
   return (
     <div>

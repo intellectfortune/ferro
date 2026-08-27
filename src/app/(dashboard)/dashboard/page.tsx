@@ -11,7 +11,7 @@ import {
 } from "@/lib/queries/bookings";
 import { countDocuments, countDocumentsAddedThisWeek } from "@/lib/queries/documents";
 import { sumRevenueThisMonth, sumRevenueLastMonth } from "@/lib/queries/invoices";
-import { getCurrentProfile, canManageVehicles } from "@/lib/actions/profile";
+import { getCurrentProfile, isFleetManagerOrAbove } from "@/lib/actions/profile";
 import { VehicleCard } from "@/components/vehicle-card";
 
 function StatCard({
@@ -54,7 +54,7 @@ function timeAgo(iso: string) {
 
 export default async function DashboardPage() {
   const profile = await getCurrentProfile();
-  const canSeeRevenue = canManageVehicles(profile?.role);
+  const canSeeRevenue = isFleetManagerOrAbove(profile?.role);
 
   const [
     vehicles,
@@ -113,7 +113,7 @@ export default async function DashboardPage() {
             trend={revenueChangePct !== null && revenueChangePct >= 0 ? "up" : "neutral"}
           />
         ) : (
-          <StatCard label="Revenue this month" value="—" caption="Owner/broker only" />
+          <StatCard label="Revenue this month" value="—" caption="Fleet Manager+ only" />
         )}
         <StatCard
           label="Documents on file"

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { cookies } from "next/headers";
-import { getCurrentProfile, canManageVehicles } from "@/lib/actions/profile";
+import { getCurrentProfile, isFleetManagerOrAbove } from "@/lib/actions/profile";
 import { connectBouncie } from "@/lib/bouncie";
 import { checkRateLimit } from "@/lib/rate-limit";
 
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   }
 
   const profile = await getCurrentProfile();
-  if (!profile || !canManageVehicles(profile.role)) {
+  if (!profile || !isFleetManagerOrAbove(profile.role)) {
     return redirectWithStatus(request, "error", "You don't have permission to connect Bouncie.");
   }
 

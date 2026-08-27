@@ -1,4 +1,4 @@
-export type UserRole = "owner" | "broker" | "employee";
+export type UserRole = "owner" | "fleet_manager" | "broker" | "employee";
 export type VehicleStatus = "draft" | "published" | "archived";
 export type BookingStatus =
   | "inquiry"

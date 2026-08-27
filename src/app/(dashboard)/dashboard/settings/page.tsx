@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getCurrentProfile, canManageVehicles } from "@/lib/actions/profile";
+import { getCurrentProfile, isFleetManagerOrAbove } from "@/lib/actions/profile";
 import { getCompanyDetails, listConnectionStatuses } from "@/lib/queries/settings";
 import { sumRevenueThisMonth, sumRevenueLastMonth, listInvoices } from "@/lib/queries/invoices";
 import { CompanyProfileForm } from "./company-profile-form";
@@ -72,7 +72,7 @@ export default async function SettingsPage({
 }) {
   const profile = await getCurrentProfile();
   if (!profile) redirect("/login");
-  if (!canManageVehicles(profile.role)) redirect("/dashboard");
+  if (!isFleetManagerOrAbove(profile.role)) redirect("/dashboard");
 
   const {
     docusign: docusignStatus,

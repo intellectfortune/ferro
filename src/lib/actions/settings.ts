@@ -1,7 +1,7 @@
 "use server";
 
 import { createServiceClient } from "@/lib/supabase/service";
-import { getCurrentProfile, canManageVehicles } from "@/lib/actions/profile";
+import { getCurrentProfile, isFleetManagerOrAbove } from "@/lib/actions/profile";
 import { revalidatePath } from "next/cache";
 import type { ConnectionProvider } from "@/types/database";
 
@@ -12,7 +12,7 @@ import type { ConnectionProvider } from "@/types/database";
  */
 export async function disconnectConnection(provider: ConnectionProvider) {
   const profile = await getCurrentProfile();
-  if (!profile || !canManageVehicles(profile.role)) {
+  if (!profile || !isFleetManagerOrAbove(profile.role)) {
     throw new Error("You don't have permission to manage connections.");
   }
 

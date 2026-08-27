@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentProfile, canManageVehicles } from "@/lib/actions/profile";
+import { getCurrentProfile, isFleetManagerOrAbove } from "@/lib/actions/profile";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import type { BookingStatus } from "@/types/database";
@@ -106,11 +106,29 @@ export async function updateBooking(
 
 export async function deleteBooking(bookingId: string) {
   const profile = await getCurrentProfile();
-  if (!profile || !canManageVehicles(profile.role)) {
-    throw new Error("You don't have permission to delete bookings.");
+  if (!profile) {
+    throw new Error("You must be signed in.");
   }
 
   const supabase = await createClient();
+
+  if (!isFleetManagerOrAbove(profile.role)) {
+    // Broker can delete a booking it created itself; anyone else (or a
+    // Broker deleting someone else's booking) is denied here with a clear
+    // message rather than relying on RLS to silently delete 0 rows.
+    const { data: booking } = await supabase
+      .from("bookings")
+      .select("created_by")
+      .eq("id", bookingId)
+      .single();
+
+    const ownedByBroker =
+      profile.role === "broker" && booking?.created_by === profile.id;
+    if (!ownedByBroker) {
+      throw new Error("You don't have permission to delete this booking.");
+    }
+  }
+
   const { error } = await supabase.from("bookings").delete().eq("id", bookingId);
 
   if (error) {

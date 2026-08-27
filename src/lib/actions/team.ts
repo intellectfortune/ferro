@@ -2,21 +2,21 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { getCurrentProfile, canManageVehicles } from "@/lib/actions/profile";
+import { getCurrentProfile, isFleetManagerOrAbove } from "@/lib/actions/profile";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { revalidatePath } from "next/cache";
 import type { UserRole } from "@/types/database";
 
 export type TeamActionState = { error: string | null; success?: boolean; message?: string };
 
-const INVITABLE_ROLES: UserRole[] = ["owner", "broker", "employee"];
+const INVITABLE_ROLES: UserRole[] = ["owner", "fleet_manager", "broker", "employee"];
 
 export async function inviteTeamMember(
   _prevState: TeamActionState,
   formData: FormData
 ): Promise<TeamActionState> {
   const profile = await getCurrentProfile();
-  if (!profile || !canManageVehicles(profile.role)) {
+  if (!profile || !isFleetManagerOrAbove(profile.role)) {
     return { error: "You don't have permission to invite team members." };
   }
 
@@ -102,7 +102,7 @@ export async function inviteTeamMember(
           error: null,
           success: true,
           message:
-            "This person already has a Ferro account — added them directly. They can log in with their existing credentials.",
+            "An account for this email already existed from a previous invite — linked it to your company now. They can log in with their existing credentials.",
         };
       }
 
@@ -125,7 +125,7 @@ export async function updateMemberRole(
   formData: FormData
 ): Promise<TeamActionState> {
   const profile = await getCurrentProfile();
-  if (!profile || !canManageVehicles(profile.role)) {
+  if (!profile || !isFleetManagerOrAbove(profile.role)) {
     return { error: "You don't have permission to change roles." };
   }
 
@@ -150,7 +150,7 @@ export async function updateMemberRole(
 
 export async function removeMember(memberId: string) {
   const profile = await getCurrentProfile();
-  if (!profile || !canManageVehicles(profile.role)) {
+  if (!profile || !isFleetManagerOrAbove(profile.role)) {
     throw new Error("You don't have permission to remove team members.");
   }
   if (memberId === profile.id) {

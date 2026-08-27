@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentProfile, canManageVehicles } from "@/lib/actions/profile";
+import { getCurrentProfile, isBrokerOrAbove, isFleetManagerOrAbove } from "@/lib/actions/profile";
 import { updateVehicle } from "@/lib/actions/vehicles";
 import { VehicleForm } from "@/components/vehicle-form";
 import { DeleteVehicleButton } from "./delete-button";
@@ -41,7 +41,10 @@ export default async function VehicleDetailPage({
         .data.publicUrl,
     })) ?? [];
 
-  const canManage = canManageVehicles(profile.role);
+  // Broker+ can edit vehicle details and manage photos; deleting the
+  // vehicle itself is Fleet Manager+ only.
+  const canManage = isBrokerOrAbove(profile.role);
+  const canDelete = isFleetManagerOrAbove(profile.role);
 
   return (
     <div>
@@ -50,7 +53,7 @@ export default async function VehicleDetailPage({
           {vehicle.year ? `${vehicle.year} ` : ""}
           {vehicle.make} {vehicle.model}
         </h1>
-        {canManage && <DeleteVehicleButton vehicleId={vehicle.id} />}
+        {canDelete && <DeleteVehicleButton vehicleId={vehicle.id} />}
       </div>
 
       <section className="mt-8 max-w-2xl">

@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentProfile, canManageVehicles } from "@/lib/actions/profile";
+import { getCurrentProfile, isFleetManagerOrAbove } from "@/lib/actions/profile";
 import { revalidatePath } from "next/cache";
 
 export type CompanyActionState = { error: string | null; success?: boolean };
@@ -19,7 +19,7 @@ export async function updateCompanyProfile(
   formData: FormData
 ): Promise<CompanyActionState> {
   const profile = await getCurrentProfile();
-  if (!profile || !canManageVehicles(profile.role)) {
+  if (!profile || !isFleetManagerOrAbove(profile.role)) {
     return { error: "You don't have permission to edit company settings." };
   }
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCurrentProfile, canManageVehicles } from "@/lib/actions/profile";
+import { getCurrentProfile, isFleetManagerOrAbove } from "@/lib/actions/profile";
 import { listInvoices } from "@/lib/queries/invoices";
 import { checkRateLimit } from "@/lib/rate-limit";
 
@@ -13,7 +13,7 @@ function csvField(value: string | number | null | undefined) {
 
 export async function GET() {
   const profile = await getCurrentProfile();
-  if (!profile || !canManageVehicles(profile.role)) {
+  if (!profile || !isFleetManagerOrAbove(profile.role)) {
     return NextResponse.json({ error: "Not authorized." }, { status: 403 });
   }
 

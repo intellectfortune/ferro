@@ -55,13 +55,14 @@ export function MemberRow({
             className="rounded-[9px] border border-line bg-surface-2 px-2 py-1 font-mono text-xs uppercase"
           >
             <option value="owner">Owner</option>
+            <option value="fleet_manager">Fleet Manager</option>
             <option value="broker">Broker</option>
             <option value="employee">Employee</option>
           </select>
         </form>
       ) : (
         <span className="flex-shrink-0 rounded-full bg-amber-soft px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wide text-amber-text">
-          {role}
+          {role.replace("_", " ")}
         </span>
       )}
 

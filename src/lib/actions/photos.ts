@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentProfile, canManageVehicles } from "@/lib/actions/profile";
+import { getCurrentProfile, isBrokerOrAbove } from "@/lib/actions/profile";
 import { bucketForCategory } from "@/lib/storage";
 import { validateUploadedFile } from "@/lib/file-validation";
 import { revalidatePath } from "next/cache";
@@ -18,7 +18,7 @@ export async function uploadVehiclePhoto(
   formData: FormData
 ): Promise<PhotoActionState> {
   const profile = await getCurrentProfile();
-  if (!profile || !canManageVehicles(profile.role)) {
+  if (!profile || !isBrokerOrAbove(profile.role)) {
     return { error: "You don't have permission to upload photos." };
   }
 
@@ -83,7 +83,7 @@ export async function deleteVehiclePhoto(photoId: string, vehicleId: string) {
   }
 
   const canDelete =
-    canManageVehicles(profile.role) || photo.uploaded_by === profile.id;
+    isBrokerOrAbove(profile.role) || photo.uploaded_by === profile.id;
   if (!canDelete) {
     throw new Error("You don't have permission to delete this photo.");
   }

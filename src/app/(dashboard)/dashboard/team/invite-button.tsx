@@ -84,6 +84,7 @@ export function InviteButton() {
                   >
                     <option value="employee">Employee</option>
                     <option value="broker">Broker</option>
+                    <option value="fleet_manager">Fleet Manager</option>
                     <option value="owner">Owner</option>
                   </select>
                 </div>

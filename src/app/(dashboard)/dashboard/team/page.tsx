@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getCurrentProfile, canManageVehicles } from "@/lib/actions/profile";
+import { getCurrentProfile, isFleetManagerOrAbove } from "@/lib/actions/profile";
 import { listTeamMembers } from "@/lib/queries/team";
 import { InviteButton } from "./invite-button";
 import { MemberRow } from "./member-row";
@@ -9,7 +9,7 @@ export default async function TeamPage() {
   if (!profile) redirect("/login");
 
   const members = await listTeamMembers();
-  const canManage = canManageVehicles(profile.role);
+  const canManage = isFleetManagerOrAbove(profile.role);
 
   return (
     <div>
