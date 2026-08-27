@@ -571,6 +571,10 @@ export interface Database {
         Args: Record<string, never>;
         Returns: number;
       };
+      find_reinvitable_user_id: {
+        Args: { target_email: string };
+        Returns: string | null;
+      };
     };
     Enums: {
       user_role: UserRole;

@@ -7,7 +7,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { revalidatePath } from "next/cache";
 import type { UserRole } from "@/types/database";
 
-export type TeamActionState = { error: string | null; success?: boolean };
+export type TeamActionState = { error: string | null; success?: boolean; message?: string };
 
 const INVITABLE_ROLES: UserRole[] = ["owner", "broker", "employee"];
 
@@ -61,6 +61,57 @@ export async function inviteTeamMember(
   const { error } = await service.auth.admin.inviteUserByEmail(email);
 
   if (error) {
+    // A previously-removed member's auth.users row still exists — removing
+    // them only ever deleted their profile, deliberately, since the account
+    // itself may be legitimately reused later. inviteUserByEmail() can't
+    // create a second account for the same email, and handle_new_user()
+    // only fires on brand-new accounts, so re-inviting that email would
+    // otherwise dead-end here. If they have no profile anywhere right now,
+    // link them to this company directly instead.
+    const alreadyRegistered =
+      error.code === "email_exists" ||
+      error.code === "user_already_exists" ||
+      /already.*registered/i.test(error.message);
+
+    if (alreadyRegistered) {
+      const { data: reinviteId, error: lookupError } = await service.rpc(
+        "find_reinvitable_user_id",
+        { target_email: email }
+      );
+
+      if (!lookupError && reinviteId) {
+        const { error: profileError } = await service.from("profiles").insert({
+          id: reinviteId,
+          company_id: profile.company_id,
+          role,
+          email,
+        });
+
+        if (profileError) {
+          return { error: profileError.message };
+        }
+
+        await service
+          .from("pending_invites")
+          .delete()
+          .eq("email", email)
+          .eq("company_id", profile.company_id);
+
+        revalidatePath("/dashboard/team");
+        return {
+          error: null,
+          success: true,
+          message:
+            "This person already has a Ferro account — added them directly. They can log in with their existing credentials.",
+        };
+      }
+
+      return {
+        error:
+          "This email is already associated with an active Ferro account and can't be invited here.",
+      };
+    }
+
     return { error: error.message };
   }
 

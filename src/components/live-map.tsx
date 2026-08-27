@@ -200,14 +200,14 @@ export function LiveMap({ apiKey, markers }: { apiKey: string; markers: MapMarke
 
   if (error) {
     return (
-      <div className="flex h-[210px] items-center justify-center rounded-[9px] border border-dashed border-line bg-surface-2 text-center">
+      <div className="flex h-[210px] lg:h-[420px] items-center justify-center rounded-[9px] border border-dashed border-line bg-surface-2 text-center">
         <p className="max-w-xs px-4 text-sm text-red-400">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="relative h-[210px] w-full overflow-hidden rounded-[9px] border border-line bg-surface-2">
+    <div className="relative h-[210px] lg:h-[420px] w-full overflow-hidden rounded-[9px] border border-line bg-surface-2">
       <div ref={containerRef} className="h-full w-full" />
       <div className="absolute right-2.5 top-2.5 flex overflow-hidden rounded-[8px] border border-line bg-surface shadow-sm">
         {(["roadmap", "satellite"] as const).map((type) => (

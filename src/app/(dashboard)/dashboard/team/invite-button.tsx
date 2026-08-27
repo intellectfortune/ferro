@@ -49,7 +49,7 @@ export function InviteButton() {
 
             {state.success ? (
               <div className="px-5 py-8 text-center">
-                <p className="text-sm">Invite sent.</p>
+                <p className="text-sm">{state.message ?? "Invite sent."}</p>
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
