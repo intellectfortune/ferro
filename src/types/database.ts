@@ -37,7 +37,8 @@ export type ConnectionProvider =
   | "google_ads"
   | "meta_ads"
   | "docusign"
-  | "pandadoc";
+  | "pandadoc"
+  | "google_calendar";
 export type ConnectionStatus = "connected" | "disconnected";
 export type InvoiceStatus = "draft" | "open" | "paid" | "void" | "uncollectible";
 export type InquirySource = "web_form" | "call" | "instagram_dm";
@@ -203,6 +204,7 @@ export interface Database {
           status: BookingStatus;
           total_price: number | null;
           notes: string | null;
+          google_calendar_event_id: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -219,6 +221,7 @@ export interface Database {
           status?: BookingStatus;
           total_price?: number | null;
           notes?: string | null;
+          google_calendar_event_id?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;

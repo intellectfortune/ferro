@@ -28,12 +28,14 @@ const CONNECT_HREF: Partial<Record<string, string>> = {
   docusign: "/api/docusign/authorize",
   bouncie: "/api/bouncie/authorize",
   pandadoc: "/api/pandadoc/authorize",
+  google_calendar: "/api/google-calendar/authorize",
 };
 
 const PROVIDER_LABEL: Partial<Record<string, string>> = {
   docusign: "DocuSign",
   bouncie: "Bouncie",
   pandadoc: "PandaDoc",
+  google_calendar: "Google Calendar",
 };
 
 function ConnectionStatusBanner({
@@ -67,6 +69,7 @@ export default async function SettingsPage({
     docusign?: string;
     bouncie?: string;
     pandadoc?: string;
+    google_calendar?: string;
     message?: string;
   }>;
 }) {
@@ -78,6 +81,7 @@ export default async function SettingsPage({
     docusign: docusignStatus,
     bouncie: bouncieStatus,
     pandadoc: pandadocStatus,
+    google_calendar: googleCalendarStatus,
     message,
   } = await searchParams;
 
@@ -113,6 +117,13 @@ export default async function SettingsPage({
       )}
       {pandadocStatus && (
         <ConnectionStatusBanner provider="pandadoc" status={pandadocStatus} message={message} />
+      )}
+      {googleCalendarStatus && (
+        <ConnectionStatusBanner
+          provider="google_calendar"
+          status={googleCalendarStatus}
+          message={message}
+        />
       )}
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">

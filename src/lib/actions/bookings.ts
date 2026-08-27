@@ -2,11 +2,64 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile, isFleetManagerOrAbove } from "@/lib/actions/profile";
+import {
+  createGoogleCalendarEvent,
+  updateGoogleCalendarEvent,
+  deleteGoogleCalendarEvent,
+} from "@/lib/google-calendar";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import type { BookingStatus } from "@/types/database";
 
 export type BookingActionState = { error: string | null };
+
+type BookingFields = ReturnType<typeof bookingFieldsFromFormData>;
+
+/**
+ * Best-effort sync to the company's connected Google Calendar (a no-op if
+ * nothing's connected — the underlying calls just return null/undefined).
+ * Deliberately never throws: a calendar hiccup shouldn't fail the booking
+ * itself, since the booking is the source of truth and Google Calendar is
+ * just a mirror of it.
+ */
+async function syncBookingToGoogleCalendar(
+  companyId: string,
+  bookingId: string,
+  fields: BookingFields,
+  existingEventId: string | null
+) {
+  try {
+    const supabase = await createClient();
+    const { data: vehicle } = await supabase
+      .from("vehicles")
+      .select("make, model")
+      .eq("id", fields.vehicle_id)
+      .single();
+
+    const details = {
+      customerName: fields.customer_name,
+      vehicleLabel: vehicle ? `${vehicle.make} ${vehicle.model}` : "Vehicle",
+      startAt: fields.start_at,
+      endAt: fields.end_at,
+      notes: fields.notes,
+    };
+
+    if (existingEventId) {
+      await updateGoogleCalendarEvent(companyId, existingEventId, details);
+      return;
+    }
+
+    const newEventId = await createGoogleCalendarEvent(companyId, details);
+    if (newEventId) {
+      await supabase
+        .from("bookings")
+        .update({ google_calendar_event_id: newEventId })
+        .eq("id", bookingId);
+    }
+  } catch (err) {
+    console.error(`Failed to sync booking ${bookingId} to Google Calendar:`, err);
+  }
+}
 
 function bookingFieldsFromFormData(formData: FormData) {
   const totalPrice = formData.get("total_price");
@@ -62,6 +115,8 @@ export async function createBooking(
     return { error: error.message };
   }
 
+  await syncBookingToGoogleCalendar(profile.company_id, data.id, fields, null);
+
   revalidatePath("/dashboard/bookings");
   revalidatePath("/dashboard/calendar");
   redirect(`/dashboard/bookings/${data.id}`);
@@ -89,14 +144,23 @@ export async function updateBooking(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("bookings")
     .update(fields)
-    .eq("id", bookingId);
+    .eq("id", bookingId)
+    .select("google_calendar_event_id")
+    .single();
 
   if (error) {
     return { error: error.message };
   }
+
+  await syncBookingToGoogleCalendar(
+    profile.company_id,
+    bookingId,
+    fields,
+    data.google_calendar_event_id
+  );
 
   revalidatePath("/dashboard/bookings");
   revalidatePath(`/dashboard/bookings/${bookingId}`);
@@ -129,10 +193,23 @@ export async function deleteBooking(bookingId: string) {
     }
   }
 
-  const { error } = await supabase.from("bookings").delete().eq("id", bookingId);
+  const { data: deleted, error } = await supabase
+    .from("bookings")
+    .delete()
+    .eq("id", bookingId)
+    .select("google_calendar_event_id")
+    .single();
 
   if (error) {
     throw new Error(error.message);
+  }
+
+  if (deleted.google_calendar_event_id) {
+    try {
+      await deleteGoogleCalendarEvent(profile.company_id, deleted.google_calendar_event_id);
+    } catch (err) {
+      console.error(`Failed to delete Google Calendar event for booking ${bookingId}:`, err);
+    }
   }
 
   revalidatePath("/dashboard/bookings");
