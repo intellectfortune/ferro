@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { DayPicker, type DateRange } from "react-day-picker";
 
 const dayClassNames = {
@@ -63,12 +63,17 @@ export function DateRangePicker({
   defaultStart,
   defaultEnd,
   label = "Dates",
+  onRangeChange,
 }: {
   startName: string;
   endName: string;
   defaultStart?: string | null;
   defaultEnd?: string | null;
   label?: string;
+  /** Optional: fires whenever the resolved start/end change, for callers
+   * that need the value in their own state rather than just the hidden
+   * form inputs (e.g. to gate a "Next" button). */
+  onRangeChange?: (start: string | null, end: string | null) => void;
 }) {
   const initialStart = toLocalInputValue(defaultStart);
   const initialEnd = toLocalInputValue(defaultEnd);
@@ -94,6 +99,12 @@ export function DateRangePicker({
 
   const startValue = formatDateTime(range?.from, startTime);
   const endValue = formatDateTime(range?.to ?? range?.from, endTime);
+
+  const onRangeChangeRef = useRef(onRangeChange);
+  onRangeChangeRef.current = onRangeChange;
+  useEffect(() => {
+    onRangeChangeRef.current?.(startValue ?? null, endValue ?? null);
+  }, [startValue, endValue]);
 
   const summary =
     range?.from && (range.to ?? range.from)

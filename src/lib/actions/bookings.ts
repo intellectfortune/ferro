@@ -119,7 +119,9 @@ export async function createBooking(
 
   revalidatePath("/dashboard/bookings");
   revalidatePath("/dashboard/calendar");
-  redirect(`/dashboard/bookings/${data.id}`);
+  // ?new=1 lets the detail page offer a one-time "send an invoice now?"
+  // prompt right after creation, regardless of which form created it.
+  redirect(`/dashboard/bookings/${data.id}?new=1`);
 }
 
 export async function updateBooking(

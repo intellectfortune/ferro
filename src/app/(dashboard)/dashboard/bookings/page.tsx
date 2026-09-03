@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { listBookings } from "@/lib/queries/bookings";
+import { listBookings, listVehiclesForSelect } from "@/lib/queries/bookings";
+import { QuickBookingChat } from "./quick-booking-chat";
 
 const STATUS_STYLE: Record<string, string> = {
   inquiry: "bg-surface-2 text-muted",
@@ -25,18 +26,21 @@ function formatRange(startAt: string, endAt: string) {
 }
 
 export default async function BookingsPage() {
-  const bookings = await listBookings();
+  const [bookings, vehicles] = await Promise.all([listBookings(), listVehiclesForSelect()]);
 
   return (
     <div>
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Bookings</h1>
-        <Link
-          href="/dashboard/bookings/new"
-          className="rounded-[9px] bg-amber px-3 py-2 text-sm font-medium text-on-amber transition hover:brightness-110"
-        >
-          New booking
-        </Link>
+        <div className="flex items-center gap-3">
+          <QuickBookingChat vehicles={vehicles} />
+          <Link
+            href="/dashboard/bookings/new"
+            className="rounded-[9px] bg-amber px-3 py-2 text-sm font-medium text-on-amber transition hover:brightness-110"
+          >
+            New booking
+          </Link>
+        </div>
       </div>
 
       {bookings.length === 0 ? (
